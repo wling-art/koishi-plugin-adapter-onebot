@@ -240,7 +240,10 @@ export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
         session.subtype = 'ban'
         break
       case 'group_decrease':
-        session.type = session.userId === session.selfId ? 'guild-deleted' : 'guild-member-deleted'
+        session.type
+          = session.userId === session.selfId
+            ? 'guild-deleted'
+            : 'guild-member-removed'
         session.subtype = session.userId === session.operatorId ? 'active' : 'passive'
         break
       case 'group_increase':
@@ -248,7 +251,7 @@ export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
         session.subtype = session.userId === session.operatorId ? 'active' : 'passive'
         break
       case 'group_card':
-        session.type = 'guild-member'
+        session.type = 'guild-member-updated'
         session.subtype = 'nickname'
         break
       case 'notify':
