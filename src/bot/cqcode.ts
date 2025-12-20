@@ -16,21 +16,23 @@ export interface CQCode {
 }
 
 export namespace CQCode {
+    const ESCAPE_MAP = { "&": "&amp;", "[": "&#91;", "]": "&#93;" };
+    const UNESCAPE_MAP = Object.fromEntries(Object.entries(ESCAPE_MAP).map(([k, v]) => [v, k]));
+
     export function escape(source: any, inline = false) {
-        const result = String(source).replace(/&/g, "&amp;").replace(/\[/g, "&#91;").replace(/\]/g, "&#93;");
-        return inline
-            ? result
-                  .replace(/,/g, "&#44;")
-                  .replace(/(\ud83c[\udf00-\udfff])|(\ud83d[\udc00-\ude4f\ude80-\udeff])|[\u2600-\u2B55]/g, " ")
-            : result;
+        let result = String(source).replace(/[&[\]]/g, (m) => ESCAPE_MAP[m]);
+        if (inline) {
+            result = result.replace(/,/g, "&#44;");
+            result = result.replace(
+                /(\ud83c[\udf00-\udfff])|(\ud83d[\udc00-\ude4f\ude80-\udeff])|[\u2600-\u2B55]/g,
+                " "
+            );
+        }
+        return result;
     }
 
     export function unescape(source: string) {
-        return String(source)
-            .replace(/&#91;/g, "[")
-            .replace(/&#93;/g, "]")
-            .replace(/&#44;/g, ",")
-            .replace(/&amp;/g, "&");
+        return String(source).replace(/&#91;|&#93;|&#44;|&amp;/g, (m) => UNESCAPE_MAP[m] ?? m);
     }
 
     const pattern = /\[CQ:(\w+)((,\w+=[^,\]]*)*)\]/;
@@ -39,26 +41,20 @@ export namespace CQCode {
         const capture = pattern.exec(source);
         if (!capture) return null;
         const [, type, attrs] = capture;
-        const data: Dict<string> = {};
-        attrs
-            ?.slice(1)
-            .split(",")
-            .forEach((str) => {
+        const data = Object.fromEntries(
+            (attrs?.slice(1).split(",") || []).map((str) => {
                 const index = str.indexOf("=");
-                data[str.slice(0, index)] = unescape(str.slice(index + 1));
-            });
+                return [str.slice(0, index), unescape(str.slice(index + 1))];
+            })
+        );
         return { type, data, capture };
     }
 
     export function parse(source: string | CQCode[]) {
         if (typeof source !== "string") {
-            return source.map(({ type, data }) => {
-                if (type === "text") {
-                    return h("text", { content: data.text });
-                } else {
-                    return h(type, data);
-                }
-            });
+            return source.map(({ type, data }) =>
+                h(type === "text" ? "text" : type, type === "text" ? { content: data.text } : data)
+            );
         }
         const elements: h[] = [];
         let result: ReturnType<typeof from>;
