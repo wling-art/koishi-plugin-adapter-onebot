@@ -11,10 +11,7 @@ interface SharedConfig<T = "ws" | "ws-reverse"> {
 let counter = 0;
 const listeners: Record<number, (response: Response) => void> = {};
 
-export class WsClient<C extends Context = Context> extends Adapter.WsClient<
-    C,
-    OneBotBot<C,any>
-> {
+export class WsClient<C extends Context = Context> extends Adapter.WsClient<C, OneBotBot<C, any>> {
     async fork(ctx: C, bot: OneBotBot<C, OneBotBot.BaseConfig & WsClient.Options>) {
         super.fork(ctx, bot);
     }
@@ -98,18 +95,17 @@ export namespace WsServer {
 }
 
 export function accept(socket: Universal.WebSocket, bot: OneBotBot<Context, any>) {
-    socket.addEventListener("message", ({ data }) => {
+    socket.addEventListener("message", async ({ data }) => {
         let parsed: any;
-        data = data.toString();
         try {
-            parsed = JSON.parse(data);
+            parsed = JSON.parse(data.toString());
         } catch {
             return bot.logger.warn("cannot parse message", data);
         }
 
         if ("post_type" in parsed) {
             bot.logger.debug("[receive] %o", parsed);
-            dispatchSession(bot, parsed);
+            await dispatchSession(bot, parsed);
         } else if (parsed.echo in listeners) {
             listeners[parsed.echo](parsed);
             delete listeners[parsed.echo];
@@ -118,19 +114,32 @@ export function accept(socket: Universal.WebSocket, bot: OneBotBot<Context, any>
 
     socket.addEventListener("close", () => {
         delete bot.internal._request;
+        Object.keys(listeners).forEach((echo) => {
+            delete listeners[Number(echo)];
+        });
     });
 
     bot.internal._request = (action, params) => {
-        const data = { action, params, echo: ++counter };
-        data.echo = ++counter;
-        return new Promise((resolve, reject) => {
-            listeners[data.echo] = resolve;
-            setTimeout(() => {
-                delete listeners[data.echo];
-                reject(new TimeoutError(params, action));
-            }, bot.config.responseTimeout);
-            socket.send(JSON.stringify(data));
-        });
+        const echo = ++counter;
+        const data = { action, params, echo };
+
+        return Promise.race([
+            new Promise<Response>((resolve, reject) => {
+                listeners[echo] = resolve;
+                try {
+                    socket.send(JSON.stringify(data));
+                } catch (error) {
+                    delete listeners[echo];
+                    reject(error);
+                }
+            }),
+            new Promise<never>((_, reject) => {
+                setTimeout(() => {
+                    delete listeners[echo];
+                    reject(new TimeoutError(params, action));
+                }, bot.config.responseTimeout);
+            })
+        ]);
     };
 
     bot.initialize();
