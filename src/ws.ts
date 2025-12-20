@@ -25,6 +25,10 @@ export class WsClient<C extends Context = Context> extends Adapter.WsClient<C, O
         if (token) http.config.headers.Authorization = `Bearer ${token}`;
         return http.ws(endpoint);
     }
+
+    async disconnect(bot: OneBotBot<C>) {
+        bot.status = Universal.Status.RECONNECT;
+    }
 }
 
 export namespace WsClient {
@@ -78,7 +82,7 @@ export class WsServer<C extends Context> extends Adapter<C, OneBotBot<C, OneBotB
     async disconnect(bot: OneBotBot<C>) {
         bot[kSocket]?.close();
         bot[kSocket] = null;
-        bot.status = 3;
+        bot.status = Universal.Status.RECONNECT;
     }
 }
 

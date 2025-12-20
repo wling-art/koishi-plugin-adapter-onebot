@@ -1,6 +1,6 @@
 import {} from "@koishijs/plugin-server";
 import { createHmac } from "crypto";
-import { Adapter, Context, HTTP, Schema } from "koishi";
+import { Adapter, Context, HTTP, Schema, Universal } from "koishi";
 import { OneBotBot } from "./bot";
 import { dispatchSession } from "./utils";
 
@@ -51,6 +51,10 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBo
             bot.logger.debug("[receive] %o", ctx.request.body);
             dispatchSession(bot, ctx.request.body);
         });
+    }
+
+    async disconnect(bot: OneBotBot<C>) {
+        bot.status = Universal.Status.RECONNECT;
     }
 }
 
