@@ -2,7 +2,7 @@ import {} from "@koishijs/plugin-server";
 import { createHmac } from "crypto";
 import { Adapter, Context, HTTP, Schema, Universal } from "koishi";
 import { OneBotBot } from "./bot";
-import { dispatchSession } from "./utils";
+import { dispatchSession, Payload } from "./utils";
 
 export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBot<C>> {
     static inject = ["server"];
@@ -39,7 +39,7 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBo
 
                 // invalid signature
                 const sig = createHmac("sha1", secret)
-                    .update(ctx.request.body[Symbol.for("unparsedBody")])
+                    .update(ctx.request.response.body[Symbol.for("unparsedBody")])
                     .digest("hex");
                 if (signature !== `sha1=${sig}`) return (ctx.status = 403);
             }
@@ -48,8 +48,8 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBo
             const bot = this.bots.find((bot) => bot.selfId === selfId);
             if (!bot) return (ctx.status = 403);
 
-            bot.logger.debug("[receive] %o", ctx.request.body);
-            dispatchSession(bot, ctx.request.body);
+            bot.logger.debug("[receive] %o", ctx.request.response.body);
+            dispatchSession(bot, ctx.request.response.body as Payload);
         });
     }
 
