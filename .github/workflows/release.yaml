@@ -1,0 +1,35 @@
+name: NPM Publish
+
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Check package version changes
+        uses: technote-space/package-version-check-action@v1
+        with:
+          COMMIT_DISABLED: 1
+        id: version_check
+
+      - name: Publish to npm
+        if: steps.version_check.outputs.has_changed == 'true'
+        run:
+          npm build
+          npm publish

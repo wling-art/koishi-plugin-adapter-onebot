@@ -1,6 +1,6 @@
 {
   "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-  "version": "6.8.2",
+  "version": "0.1.0",
   "description": "OneBot Adapter for Koishi",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -8,16 +8,16 @@
     "lib"
   ],
   "contributors": [
-    "Shigma <shigma10826@gmail.com>"
+    "MrlingXD <90316914+wling-art@users.noreply.github.com>"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/koishijs/koishi-plugin-adapter-onebot",
+  "homepage": "https://github.com/wling-art/koishi-plugin-adapter-onebot",
   "repository": {
     "type": "git",
-    "url": "https://github.com/koishijs/koishi-plugin-adapter-onebot.git"
+    "url": "https://github.com/wling-art/koishi-plugin-adapter-onebot.git"
   },
   "bugs": {
-    "url": "https://github.com/koishijs/koishi-plugin-adapter-onebot/issues"
+    "url": "https://github.com/wling-art/koishi-plugin-adapter-onebot/issues"
   },
   "keywords": [
     "bot",
@@ -41,8 +41,7 @@
     }
   },
   "scripts": {
-    "build": "atsc -b",
-    "lint": "eslint --ext=ts --cache"
+    "build": "atsc -b"
   },
   "devDependencies": {
     "@cordisjs/eslint-config": "^1.1.1",

@@ -1,5 +1,8 @@
 # koishi-plugin-adapter-onebot
 
+> 本项目基于 [koishijs/koishi-plugin-adapter-onebot](https://github.com/koishijs/koishi-plugin-adapter-onebot) fork，<br>
+> 用于优化和补充原仓库功能，便于后续维护和更新。
+
 适用于 [Koishi](https://koishi.chat/) 的 OneBot 适配器。
 
 [OneBot](https://github.com/howmanybots/onebot) 是一个聊天机器人应用接口标准。
