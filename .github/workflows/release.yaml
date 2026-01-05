@@ -1,8 +1,7 @@
 name: NPM Publish
 
 on:
-  push:
-    branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -22,14 +21,7 @@ jobs:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
 
-      - name: Check package version changes
-        uses: technote-space/package-version-check-action@v1
-        with:
-          COMMIT_DISABLED: 1
-        id: version_check
-
       - name: Publish to npm
-        if: steps.version_check.outputs.has_changed == 'true'
-        run:
+        run: |
           npm build
           npm publish
