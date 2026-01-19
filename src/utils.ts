@@ -1,104 +1,109 @@
-import { h, hyphenate, omit, Universal } from "koishi";
+import { group } from "console";
+import { h, omit, Universal } from "koishi";
 import * as qface from "qface";
-import { BaseBot, CQCode } from "./bot";
-import * as OneBot from "./types";
+import { OneBot } from "./bot";
+import { CQCode } from "./bot/cqcode";
+import { EventType, GroupMemberRole } from "./types/enum";
+import { BaseEvent } from "./types/event/base";
+import { isGroupMessageEvent, isMessageEvent, MessageEvent } from "./types/event/message";
+import { isGroupPokeNotice, isNoticeEvent, NoticeType } from "./types/event/notice";
+import { isFriendRequest, isGroupRequest, isRequestEvent } from "./types/event/request";
+import { GroupInfo, GroupMemberInfo } from "./types/group";
+import { UserInfo } from "./types/user";
 
 export * from "./types";
 
-export const decodeUser = (user: OneBot.AccountInfo): Universal.User => ({
-    id: user.tiny_id || user.user_id.toString(),
+export const convertUser = (user: UserInfo, isBot: boolean = false): Universal.User => ({
+    id: user.user_id.toString(),
     name: user.nickname,
-    userId: user.tiny_id || user.user_id.toString(),
-    avatar: user.user_id ? `http://q.qlogo.cn/headimg_dl?dst_uin=${user.user_id}&spec=640` : undefined,
-    username: user.nickname
+    nick: (user.remark as string) || user.nickname,
+    avatar: `https://q.qlogo.cn/headimg_dl?dst_uin=${user.user_id}&spec=640`,
+    isBot: isBot
 });
 
-export const decodeGuildMember = (user: OneBot.SenderInfo): Universal.GuildMember => ({
-    user: decodeUser(user),
-    nick: user.card,
+export const decodeUser = (event: MessageEvent, isBot: boolean = false): Universal.User => ({
+    id: event.user_id.toString(),
+    name: event.sender.nickname,
+    avatar: `https://q.qlogo.cn/headimg_dl?dst_uin=${event.user_id}&spec=640`,
+    isBot: isBot
+});
+
+export function decodeGuild(group: GroupInfo): Universal.Guild {
+    return {
+        id: String(group.group_id),
+        name: group.group_name,
+        avatar: `https://p.qlogo.cn/gh/${group.group_id}/${group.group_id}/640`
+    };
+}
+
+export const decodeGuildMember = (user: GroupMemberInfo, isBot: boolean = false): Universal.GuildMember => ({
+    user: convertUser(user, isBot),
+    nick: user.card || user.nickname,
+    avatar: `https://q.qlogo.cn/headimg_dl?dst_uin=${user.user_id}&spec=640`,
     roles: [user.role]
 });
 
-export const adaptQQGuildMemberInfo = (user: OneBot.GuildMemberInfo): Universal.GuildMember => ({
-    user: {
-        id: user.tiny_id,
-        name: user.nickname,
-        isBot: user.role_name === "机器人"
-    },
-    name: user.nickname,
-    roles: user.role_name ? [user.role_name] : []
-});
-
-export const adaptQQGuildMemberProfile = (user: OneBot.GuildMemberProfile): Universal.GuildMember => ({
-    user: {
-        id: user.tiny_id,
-        name: user.nickname,
-        isBot: user.roles?.some((r) => r.role_name === "机器人")
-    },
-    name: user.nickname,
-    roles: user.roles?.map((r) => r.role_name) || []
-});
-
-export async function adaptMessage(
-    bot: BaseBot,
-    data: OneBot.Message,
+export async function decodeMessage(
+    bot: OneBot,
+    event: MessageEvent,
     message: Universal.Message = {},
     payload: Universal.MessageLike = message
 ) {
-    message.id = message.messageId = data.message_id.toString();
+    const [guildId, channelId] = decodeGroupChannelId(event);
 
     // message content
-    const chain = CQCode.parse(data.message);
-    if (bot.config.advanced.splitMixedContent) {
-        chain.forEach((item, index) => {
-            if (item.type !== "image") return;
-            const left = chain[index - 1];
-            if (left && left.type === "text" && left.attrs.content.trimEnd() === left.attrs.content) {
-                left.attrs.content += " ";
-            }
-            const right = chain[index + 1];
-            if (right && right.type === "text" && right.attrs.content.trimStart() === right.attrs.content) {
-                right.attrs.content = " " + right.attrs.content;
-            }
-        });
-    }
+    const chain = CQCode.parse(event.message);
 
+    // 映射
     message.elements = h.transform(chain, {
-        at(attrs) {
-            if (attrs.qq !== "all") return h.at(attrs.qq, { name: attrs.name });
-            return h("at", { type: "all" });
+        text(attrs: CQCode.Text["data"]) {
+            return h.text(attrs.text);
         },
-        face({ id }) {
-            const name = qface.get(id)?.QDes.slice(1);
-            return h("face", { id, name, platform: bot.platform }, [h.image(qface.getUrl(id))]);
-        },
-        image(attrs) {
-            return h("img", {
-                src: attrs.url || attrs.file,
-                ...omit(attrs, ["url"])
+        at(attrs: CQCode.At["data"]) {
+            if (attrs.qq !== "all")
+                return h.at(attrs.qq, {
+                    name: attrs.name,
+                    ...omit(attrs, [attrs.qq ? "qq" : undefined, attrs.name ? "name" : undefined])
+                });
+            return h.at("at", {
+                type: "all",
+                ...omit(attrs, [attrs.qq ? "qq" : undefined, attrs.name ? "name" : undefined])
             });
         },
-        record(attrs) {
-            return h("audio", {
-                src: attrs.url || attrs.file,
-                ...omit(attrs, ["url"])
+        face(attrs: CQCode.Face["data"]) {
+            const name = qface.get(attrs.id)?.QDes.slice(1);
+            return h("face", { id: attrs.id, name, platform: bot.platform }, [h.image(qface.getUrl(attrs.id))]);
+        },
+        image(attrs: CQCode.Image["data"]) {
+            return h.image(attrs.url || attrs.file, {
+                title: attrs.name || undefined,
+                ...omit(attrs, [
+                    attrs.name ? "name" : undefined,
+                    attrs.url ? "url" : undefined,
+                    attrs.file ? "file" : undefined
+                ])
             });
         },
-        video(attrs) {
-            return h("video", {
-                src: attrs.url || attrs.file,
-                ...omit(attrs, ["url"])
+        record(attrs: CQCode.Record["data"]) {
+            return h.audio(attrs.url || attrs.file, {
+                ...omit(attrs, [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined])
             });
         },
-        file(attrs) {
-            return h("file", {
-                src: attrs.url || attrs.file,
-                ...omit(attrs, ["url"])
+        video(attrs: CQCode.Video["data"]) {
+            return h.video(attrs.url || attrs.file, {
+                ...omit(attrs, [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined])
             });
+        },
+        file(attrs: CQCode.File["data"]) {
+            return h.file(attrs.url || attrs.file, {
+                ...omit(attrs, [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined])
+            });
+        },
+        reply(attrs: CQCode.Reply["data"]) {
+            return h("reply", { id: attrs.id });
         }
     });
-    const [guildId, channelId] = decodeGuildChannelId(data);
-    if (message.elements[0]?.type === "reply") {
+    if (message.elements[0].type === "reply") {
         const reply = message.elements.shift();
         message.quote = await bot.getMessage(channelId, reply.attrs.id).catch((error) => {
             bot.logger.warn(error);
@@ -106,176 +111,195 @@ export async function adaptMessage(
         });
     }
     message.content = message.elements.join("");
+    payload.timestamp = event.time * 1000;
+    message.id = event.message_id.toString();
 
-    if (!payload) return message;
-    payload.user = decodeUser(data.sender);
-    payload.member = decodeGuildMember(data.sender);
-    payload.timestamp = data.time * 1000;
-    payload.guild = guildId && { id: guildId };
-    payload.channel = channelId && {
+    payload.channel = {
         id: channelId,
-        type: guildId ? Universal.Channel.Type.TEXT : Universal.Channel.Type.DIRECT
+        type: event.message_type === "group" ? Universal.Channel.Type.TEXT : Universal.Channel.Type.DIRECT,
+        name: event.message_type === "group" ? (event.group_name as string) || undefined : event.sender.nickname
     };
+    payload.user = decodeUser(event);
+
+    if (isGroupMessageEvent(event)) {
+        payload.guild = {
+            id: event.group_id.toString(),
+            name: (event.group_name as string) || undefined,
+            avatar: `https://p.qlogo.cn/gh/${event.group_id}/${event.group_id}/640`
+        };
+        payload.member = {
+            user: decodeUser(event),
+            name: event.sender.nickname,
+            nick: event.sender.card,
+            avatar: `https://q.qlogo.cn/headimg_dl?dst_uin=${event.user_id}&spec=640`,
+            roles: [event.sender.role]
+        };
+    }
     return message;
 }
 
-const decodeGuildChannelId = (data: OneBot.Message) => {
-    if (data.guild_id) {
-        return [data.guild_id, data.channel_id];
-    } else if (data.group_id) {
-        return [data.group_id.toString(), data.group_id.toString()];
+const decodeGroupChannelId = (event: MessageEvent) => {
+    if (event.message_type === "group") {
+        return [event.group_id.toString(), event.group_id.toString()];
     } else {
-        return [undefined, "private:" + data.sender.user_id];
+        return [undefined, "private:" + event.sender.user_id];
     }
 };
 
-export const adaptGuild = (info: OneBot.GroupInfo | OneBot.GuildBaseInfo): Universal.Guild => {
-    if ((info as OneBot.GuildBaseInfo).guild_id) {
-        const guild = info as OneBot.GuildBaseInfo;
-        return {
-            id: guild.guild_id,
-            name: guild.guild_name
-        };
-    } else {
-        const group = info as OneBot.GroupInfo;
-        return {
-            id: group.group_id.toString(),
-            name: group.group_name
-        };
-    }
+export const adaptGuild = (info: GroupInfo): Universal.Guild => {
+    return {
+        id: info.group_id.toString(),
+        name: info.group_name,
+        avatar: `https://p.qlogo.cn/gh/${info.group_id}/${info.group_id}/640`
+    };
 };
 
-export const adaptChannel = (info: OneBot.GroupInfo | OneBot.ChannelInfo): Universal.Channel => {
-    if ((info as OneBot.ChannelInfo).channel_id) {
-        const channel = info as OneBot.ChannelInfo;
-        return {
-            id: channel.channel_id,
-            name: channel.channel_name,
-            type: Universal.Channel.Type.TEXT
-        };
-    } else {
-        const group = info as OneBot.GroupInfo;
-        return {
-            id: group.group_id.toString(),
-            name: group.group_name,
-            type: Universal.Channel.Type.TEXT
-        };
-    }
+export const adaptChannel = (info: GroupInfo): Universal.Channel => {
+    return {
+        id: info.group_id.toString(),
+        name: info.group_name,
+        type: Universal.Channel.Type.TEXT
+    };
 };
 
-export async function dispatchSession(bot: BaseBot, data: OneBot.Payload) {
-    if (data.self_tiny_id) {
-        // don't dispatch any guild message without guild initialization
-        bot = bot["guildBot"];
-        if (!bot) return;
+export async function dispatchSession(bot: OneBot, data: BaseEvent<EventType>) {
+    if (data.post_type === EventType.MESSAGE_SENT) {
+        bot.logger.warn("暂不支持自身消息事件的处理");
+        return;
     }
-
     const session = await adaptSession(bot, data);
     if (!session) return;
-    session.setInternal("onebot", data);
     bot.dispatch(session);
 }
 
-export async function adaptSession(bot: BaseBot, data: OneBot.Payload) {
+export async function adaptSession(bot: OneBot, event: BaseEvent<EventType>) {
     const session = bot.session();
-    session.selfId = data.self_tiny_id ? data.self_tiny_id : "" + data.self_id;
-    session.type = data.post_type;
+    session.setInternal("onebot", event);
+    session.selfId = event.self_id.toString();
+    session.timestamp = event.time * 1000;
 
-    if (data.post_type === "message" || data.post_type === "message_sent") {
-        await adaptMessage(bot, data, (session.event.message = {}), session.event);
-        if (data.post_type === "message_sent" && !session.guildId) {
-            session.channelId = "private:" + data.target_id;
-        }
+    if (isMessageEvent(event)) {
         session.type = "message";
-        session.subtype = data.message_type === "guild" ? "group" : data.message_type;
-        session.isDirect = data.message_type === "private";
-        session.subsubtype = data.message_type;
+        await decodeMessage(bot, event, (session.event.message = {}), session.event);
+        session.isDirect = event.message_type === "private";
         return session;
-    }
-
-    session.subtype = data.sub_type;
-    if (data.user_id) session.userId = "" + data.user_id;
-    if (data.group_id) session.guildId = session.channelId = "" + data.group_id;
-    if (data.guild_id) session.guildId = "" + data.guild_id;
-    if (data.channel_id) session.channelId = "" + data.channel_id;
-    if (data.target_id) session["targetId"] = "" + data.target_id;
-    if (data.operator_id) session.operatorId = "" + data.operator_id;
-    if (data.message_id) session.messageId = "" + data.message_id;
-
-    if (data.post_type === "request") {
-        session.content = data.comment;
-        session.messageId = data.flag;
-        if (data.request_type === "friend") {
+    } else if (isRequestEvent(event)) {
+        session.content = event.comment;
+        session.messageId = event.flag;
+        session.userId = event.user_id.toString();
+        if (isFriendRequest(event)) {
             session.type = "friend-request";
-            session.channelId = `private:${session.userId}`;
-        } else if (data.sub_type === "add") {
-            session.type = "guild-member-request";
-        } else {
-            session.type = "guild-request";
+            session.channelId = `private:${event.user_id}`;
+        } else if (isGroupRequest(event)) {
+            session.channelId = event.group_id.toString();
+            session.guildId = event.group_id.toString();
+            if (event.sub_type === "add") {
+                session.type = "guild-member-request";
+            } else if (event.sub_type === "invite") {
+                session.type = "guild-request";
+            }
         }
-    } else if (data.post_type === "notice") {
-        switch (data.notice_type) {
-            case "group_recall":
+    } else if (isNoticeEvent(event)) {
+        switch (event.notice_type) {
+            case NoticeType.GROUP_RECALL:
                 session.type = "message-deleted";
-                session.subtype = "group";
+                session.userId = event.user_id.toString();
+                session.operatorId = event.operator_id.toString();
+                session.messageId = event.message_id.toString();
+                session.channelId = event.group_id.toString();
+                session.guildId = event.group_id.toString();
+                session.isDirect = false;
                 break;
-            case "friend_recall":
+            case NoticeType.FRIEND_RECALL:
                 session.type = "message-deleted";
-                session.subtype = "private";
-                session.channelId = `private:${session.userId}`;
+                session.userId = event.user_id.toString();
+                session.operatorId = event.user_id.toString();
+                session.messageId = event.message_id.toString();
+                session.channelId = `private:${event.user_id}`;
+                session.isDirect = true;
                 break;
-            // from go-cqhttp source code, but not mentioned in official docs
-            case "guild_channel_recall":
-                session.type = "message-deleted";
-                session.subtype = "guild";
-                break;
-            case "friend_add":
+            case NoticeType.FRIEND_ADD:
                 session.type = "friend-added";
+                session.userId = event.user_id.toString();
                 break;
-            case "group_admin":
-                session.type = "guild-member";
-                session.subtype = "role";
+            case NoticeType.GROUP_ADMIN:
+                session.type = "guild-role-updated";
+                session.userId = event.user_id.toString();
+                session.guildId = event.group_id.toString();
+                session.channelId = event.group_id.toString();
+                session.roleId = event.sub_type === "set" ? GroupMemberRole.admin : GroupMemberRole.member;
                 break;
-            case "group_ban":
-                session.type = "guild-member";
-                session.subtype = "ban";
-                break;
-            case "group_decrease":
-                session.type = session.userId === session.selfId ? "guild-deleted" : "guild-member-removed";
-                session.subtype = session.userId === session.operatorId ? "active" : "passive";
-                break;
-            case "group_increase":
-                session.type = session.userId === session.selfId ? "guild-added" : "guild-member-added";
-                session.subtype = session.userId === session.operatorId ? "active" : "passive";
-                break;
-            case "group_card":
+            case NoticeType.GROUP_BAN:
                 session.type = "guild-member-updated";
-                session.subtype = "nickname";
+                session.userId = event.user_id.toString();
+                session.guildId = event.group_id.toString();
+                session.channelId = event.group_id.toString();
+                session.operatorId = event.operator_id.toString();
                 break;
-            case "notify":
-                session.type = "notice";
-                session.subtype = hyphenate(data.sub_type);
-                if (session.subtype === "poke") {
-                    session.channelId ||= `private:${session.userId}`;
-                } else if (session.subtype === "honor") {
-                    session.subsubtype = hyphenate(data.honor_type);
+            case NoticeType.GROUP_DECREASE:
+                session.type = event.sub_type === "kick_me" ? "guild-removed" : "guild-member-removed";
+                session.userId = event.user_id.toString();
+                session.guildId = event.group_id.toString();
+                session.channelId = event.group_id.toString();
+                session.operatorId = event.operator_id.toString();
+                break;
+            case NoticeType.GROUP_INCREASE:
+                session.type = event.user_id.toString() === session.selfId ? "guild-added" : "guild-member-added";
+                session.userId = event.user_id.toString();
+                session.guildId = event.group_id.toString();
+                session.channelId = event.group_id.toString();
+                session.operatorId = event.operator_id.toString();
+                break;
+            case NoticeType.GROUP_CARD:
+                session.type = "guild-member-updated";
+                session.userId = event.user_id.toString();
+                session.guildId = event.group_id.toString();
+                session.channelId = event.group_id.toString();
+                session.content = event.card_new;
+                break;
+            case NoticeType.NOTIFY:
+                session.type = "onebot/notice";
+                switch (event.sub_type) {
+                    case "poke":
+                        session.type += "-poke";
+                        session.userId = event.target_id.toString();
+                        if (isGroupPokeNotice(event)) {
+                            session.channelId = event.group_id.toString();
+                            session.guildId = event.group_id.toString();
+                            session.isDirect = false;
+                        }
+                        session.isDirect = true;
+                        session.channelId = `private:${event.user_id}`;
+                        break;
+                    case "honor":
+                        session.type += "-honor";
+                        session.channelId = event.group_id.toString();
+                        session.guildId = event.group_id.toString();
+                        session.userId = event.user_id.toString();
+                        session.content = event.honor_type;
+                        break;
+                    case "lucky_king":
+                        session.type += "-lucky-king";
+                        session.channelId = event.group_id.toString();
+                        session.guildId = event.group_id.toString();
+                        session.userId = event.target_id.toString();
+                        break;
+                    case "title":
+                        session.type += "-title";
+                        session.channelId = event.group_id.toString();
+                        session.guildId = event.group_id.toString();
+                        session.userId = event.user_id.toString();
+                        session.content = event.title;
+                        break;
                 }
                 break;
-            case "message_reactions_updated":
-                session.type = "onebot";
-                session.subtype = "message-reactions-updated";
-                break;
-            case "channel_created":
-                session.type = "onebot";
-                session.subtype = "channel-created";
-                break;
-            case "channel_updated":
-                session.type = "onebot";
-                session.subtype = "channel-updated";
-                break;
-            case "channel_destroyed":
-                session.type = "onebot";
-                session.subtype = "channel-destroyed";
+            case NoticeType.GROUP_ESSENCE:
+                session.type = "onebot/group-essence";
+                session.userId = event.sender_id.toString();
+                session.guildId = event.group_id.toString();
+                session.channelId = event.group_id.toString();
+                session.messageId = event.message_id.toString();
+                session.operatorId = event.operator_id.toString();
                 break;
             // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/33
             // case 'offline_file':

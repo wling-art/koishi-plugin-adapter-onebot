@@ -1,18 +1,18 @@
 import { WebSocketLayer } from "@koishijs/plugin-server";
-import { Adapter, Context, HTTP, Logger, Schema, Time, Universal } from "koishi";
-import { OneBotBot } from "./bot";
-import { dispatchSession, Response, TimeoutError } from "./utils";
+import { Adapter, Context, Dict, HTTP, Logger, Schema, Time, Universal } from "koishi";
+import { OneBot } from "./bot";
+import { ApiResponse, dispatchSession, TimeoutError } from "./utils";
 
-interface SharedConfig<T = "ws" | "ws-reverse"> {
+export interface SharedConfig<T = "ws" | "ws-reverse"> {
     protocol: T;
     responseTimeout?: number;
 }
 
 let counter = 0;
-const listeners: Record<number, (response: Response) => void> = {};
+const listeners: Record<number, (response: ApiResponse) => void> = {};
 
-export class WsClient<C extends Context = Context> extends Adapter.WsClient<C, OneBotBot<C, any>> {
-    async fork(ctx: C, bot: OneBotBot<C, OneBotBot.BaseConfig & WsClient.Options>) {
+export class WsClient<C extends Context = Context> extends Adapter.WsClient<C, OneBot<C>> {
+    async fork(ctx: C, bot: OneBot<C>) {
         super.fork(ctx, bot);
     }
     accept(socket: Universal.WebSocket): void {
@@ -26,7 +26,7 @@ export class WsClient<C extends Context = Context> extends Adapter.WsClient<C, O
         return http.ws(endpoint);
     }
 
-    async disconnect(bot: OneBotBot<C>) {
+    async disconnect(bot: OneBot<C>) {
         bot.status = Universal.Status.RECONNECT;
     }
 }
@@ -49,25 +49,24 @@ export namespace WsClient {
 
 const kSocket = Symbol("socket");
 
-export class WsServer<C extends Context> extends Adapter<C, OneBotBot<C, OneBotBot.BaseConfig & WsServer.Options>> {
+export class WsServer<C extends Context> extends Adapter<C, OneBot<C>> {
     static inject = ["server"];
 
     public logger: Logger;
     public wsServer?: WebSocketLayer;
 
-    constructor(ctx: C, bot: OneBotBot<C>) {
+    constructor(ctx: C, bot: OneBot<C>) {
         super(ctx);
         this.logger = ctx.logger("onebot");
 
-        const { path = "/onebot" } = bot.config as WsServer.Options;
+        const { path = "/onebot" } = bot.config;
         this.wsServer = ctx.server.ws(path, (socket, { headers }) => {
             this.logger.debug("connected with", headers);
             if (headers["x-client-role"] !== "Universal") {
                 return socket.close(1008, "invalid x-client-role");
             }
-            const selfId = headers["x-self-id"].toString();
-            const bot = this.bots.find((bot) => bot.selfId === selfId);
-            if (!bot) return socket.close(1008, "invalid x-self-id");
+            // const selfId = headers["x-self-id"].toString();
+            // if (!bot) return socket.close(1008, "invalid x-self-id");
 
             bot[kSocket] = socket;
             accept(socket as Universal.WebSocket, bot);
@@ -79,7 +78,7 @@ export class WsServer<C extends Context> extends Adapter<C, OneBotBot<C, OneBotB
         });
     }
 
-    async disconnect(bot: OneBotBot<C>) {
+    async disconnect(bot: OneBot<C>) {
         bot[kSocket]?.close();
         bot[kSocket] = null;
         bot.status = Universal.Status.RECONNECT;
@@ -98,7 +97,7 @@ export namespace WsServer {
     }).description("连接设置");
 }
 
-export function accept(socket: Universal.WebSocket, bot: OneBotBot<Context, any>) {
+export function accept(socket: Universal.WebSocket, bot: OneBot<Context>) {
     socket.addEventListener("message", async ({ data }) => {
         let parsed: any;
         try {
@@ -123,12 +122,12 @@ export function accept(socket: Universal.WebSocket, bot: OneBotBot<Context, any>
         });
     });
 
-    bot.internal._request = (action, params) => {
+    bot.internal._request = (action: string, params: Dict) => {
         const echo = ++counter;
         const data = { action, params, echo };
 
         return Promise.race([
-            new Promise<Response>((resolve, reject) => {
+            new Promise<ApiResponse>((resolve, reject) => {
                 listeners[echo] = resolve;
                 try {
                     socket.send(JSON.stringify(data));

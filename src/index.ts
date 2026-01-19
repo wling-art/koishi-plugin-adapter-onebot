@@ -1,6 +1,6 @@
 import { Session } from "koishi";
-import { OneBotBot } from "./bot";
-import * as OneBot from "./utils";
+import { OneBot } from "./bot";
+import { Internal } from "./internal";
 
 export { OneBot };
 
@@ -8,19 +8,23 @@ export * from "./bot";
 export * from "./http";
 export * from "./ws";
 
-export default OneBotBot;
+export default OneBot;
 
 declare module "@satorijs/core" {
     interface Session {
-        onebot?: OneBot.Payload & OneBot.Internal;
+        onebot?: Internal & {
+            targetId?: string;
+            duration?: number;
+        };
     }
 }
 
 declare module "koishi" {
     interface Events {
-        "onebot/message-reactions-updated"(session: Session): void;
-        "onebot/channel-updated"(session: Session): void;
-        "onebot/channel-created"(session: Session): void;
-        "onebot/channel-destroyed"(session: Session): void;
+        "onebot/notice-poke"(session: Session): void;
+        "onebot/notice-honor"(session: Session): void;
+        "onebot/notice-title"(session: Session): void;
+        "onebot/notice-lucky-king"(session: Session): void;
+        "onebot/group-essence"(session: Session): void;
     }
 }

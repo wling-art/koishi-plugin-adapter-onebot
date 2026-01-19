@@ -1,19 +1,18 @@
 import {} from "@koishijs/plugin-server";
 import { createHmac } from "crypto";
 import { Adapter, Context, HTTP, Schema, Universal } from "koishi";
-import { OneBotBot } from "./bot";
-import { dispatchSession, Payload } from "./utils";
+import { OneBot } from "./bot";
+import { isBaseEvent } from "./types/event/base";
+import { dispatchSession } from "./utils";
 
-export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBot<C>> {
+export class HttpServer<C extends Context = Context> extends Adapter<C, OneBot<C>> {
     static inject = ["server"];
 
-    declare bots: OneBotBot<C>[];
-
-    async fork(ctx: C, bot: OneBotBot<C, OneBotBot.Config & HttpServer.Options>) {
+    async fork(ctx: C, bot: OneBot<C>) {
         super.fork(ctx, bot);
         const config = bot.config;
-        const { endpoint, token } = config;
-        if (!endpoint) return;
+        const { baseURL, token } = config;
+        if (!baseURL) return;
 
         const http = ctx.http.extend({
             ...config,
@@ -29,7 +28,7 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBo
         return bot.initialize();
     }
 
-    async connect(bot: OneBotBot<C, OneBotBot.Config & HttpServer.Options>) {
+    async connect(bot: OneBot<C>) {
         const { secret, path = "/onebot" } = bot.config;
         this.ctx.server.post(path, (ctx) => {
             if (secret) {
@@ -44,16 +43,12 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBotBo
                 if (signature !== `sha1=${sig}`) return (ctx.status = 403);
             }
 
-            const selfId = ctx.headers["x-self-id"].toString();
-            const bot = this.bots.find((bot) => bot.selfId === selfId);
-            if (!bot) return (ctx.status = 403);
-
-            bot.logger.debug("[receive] %o", ctx.request.response.body);
-            dispatchSession(bot, ctx.request.response.body as Payload);
+            if (!isBaseEvent(ctx.request.response.body)) return (ctx.status = 400);
+            dispatchSession(bot, ctx.request.response.body);
         });
     }
 
-    async disconnect(bot: OneBotBot<C>) {
+    async disconnect(bot: OneBot<C>) {
         bot.status = Universal.Status.RECONNECT;
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "OneBot Adapter for Koishi",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -52,13 +52,11 @@
     "esbuild-register": "^3.6.0",
     "eslint": "^9.39.2",
     "koishi": "^4.18.9",
+    "qface": "^1.4.1",
     "typescript": "^5.9.3",
     "yml-register": "^1.2.5"
   },
   "peerDependencies": {
     "koishi": "^4.18.6"
-  },
-  "dependencies": {
-    "qface": "^1.4.1"
   }
 }

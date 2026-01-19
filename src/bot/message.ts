@@ -1,7 +1,7 @@
 import { Context, Dict, h, MessageEncoder, pick, Universal } from "koishi";
-import { BaseBot } from "./base";
-import { CQCode } from "./cqcode";
 import { fileURLToPath } from "node:url";
+import { OneBot } from ".";
+import { CQCode } from "./cqcode";
 
 export interface Author extends Universal.User {
     time?: string | number;
@@ -10,16 +10,16 @@ export interface Author extends Universal.User {
 
 class State {
     author: Partial<Author> = {};
-    children: CQCode[] = [];
+    children: CQCode.CQCodeUnion[] = [];
 
     constructor(public type: "message" | "forward" | "reply") {}
 }
 
 export const PRIVATE_PFX = "private:";
 
-export class OneBotMessageEncoder<C extends Context = Context> extends MessageEncoder<C, BaseBot<C>> {
+export class OneBotMessageEncoder<C extends Context = Context> extends MessageEncoder<C, OneBot<C>> {
     stack: State[] = [new State("message")];
-    children: CQCode[] = [];
+    children: CQCode.CQCodeUnion[] = [];
 
     override async prepare(): Promise<void> {
         super.prepare();
@@ -42,12 +42,15 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
         session.content = "";
         session.messageId =
             this.session.event.channel.type === Universal.Channel.Type.DIRECT
-                ? "" +
-                  (await this.bot.internal.sendPrivateForwardMsg(
-                      this.channelId.slice(PRIVATE_PFX.length),
-                      this.stack[0].children
-                  ))
-                : "" + (await this.bot.internal.sendGroupForwardMsg(this.channelId, this.stack[0].children));
+                ? (
+                      await this.bot.internal.sendPrivateForwardMsg(
+                          Number(this.channelId.slice(PRIVATE_PFX.length)),
+                          this.stack[0].children
+                      )
+                  ).toString()
+                : (
+                      await this.bot.internal.sendGroupForwardMsg(Number(this.channelId), this.stack[0].children)
+                  ).toString();
         session.userId = this.bot.selfId;
         session.channelId = this.session.channelId;
         session.guildId = this.session.guildId;
@@ -79,24 +82,14 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
         const { type, author } = this.stack[0];
         if (!this.children.length && !author.messageId) return;
         if (type === "forward") {
-            if (author.messageId) {
-                this.stack[1].children.push({
-                    type: "node",
-                    data: {
-                        id: author.messageId
-                    }
-                });
-            } else {
-                this.stack[1].children.push({
-                    type: "node",
-                    data: {
-                        name: author.name || this.bot.user.name,
-                        uin: author.id || this.bot.userId,
-                        content: String(this.children),
-                        time: `${Math.floor((+author.time || Date.now()) / 1000)}`
-                    }
-                });
-            }
+            this.stack[1].children.push({
+                type: "node",
+                data: {
+                    user_id: author.messageId,
+                    nickname: author.nick || author.name,
+                    content: []
+                }
+            });
 
             this.children = [];
             return;
@@ -104,11 +97,15 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
 
         const session = this.bot.session();
         session.content = "";
-        session.messageId = this.bot.parent
-            ? "" + (await this.bot.internal.sendGuildChannelMsg(this.session.guildId, this.channelId, this.children))
-            : this.session.event.channel.type === Universal.Channel.Type.DIRECT
-              ? "" + (await this.bot.internal.sendPrivateMsg(this.channelId.slice(PRIVATE_PFX.length), this.children))
-              : "" + (await this.bot.internal.sendGroupMsg(this.channelId, this.children));
+        session.messageId =
+            this.session.event.channel.type === Universal.Channel.Type.DIRECT
+                ? (
+                      await this.bot.internal.sendPrivateMsg(
+                          Number(this.channelId.slice(PRIVATE_PFX.length)),
+                          this.children
+                      )
+                  ).toString()
+                : (await this.bot.internal.sendGroupMsg(Number(this.channelId), this.children)).toString();
         session.userId = this.bot.selfId;
         session.channelId = this.session.channelId;
         session.guildId = this.session.guildId;
@@ -124,9 +121,9 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
         // 本地文件路径
         const file = src.startsWith("file:") ? fileURLToPath(src) : await this.bot.internal.downloadFile(src);
         if (this.session.event.channel.type === Universal.Channel.Type.DIRECT) {
-            await this.bot.internal.uploadPrivateFile(this.channelId.slice(PRIVATE_PFX.length), file, name);
+            await this.bot.internal.uploadPrivateFile(Number(this.channelId.slice(PRIVATE_PFX.length)), file, name);
         } else {
-            await this.bot.internal.uploadGroupFile(this.channelId, file, name);
+            await this.bot.internal.uploadGroupFile(Number(this.channelId), file, name);
         }
         const session = this.bot.session();
         // 相关 API 没有返回 message_id
@@ -180,9 +177,13 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/23
             if (attrs.href) this.text(`（${attrs.href}）`);
         } else if (["video", "audio", "image", "img"].includes(type)) {
-            if (type === "video" || type === "audio") await this.flush();
-            if (type === "audio") type = "record";
-            if (type === "img") type = "image";
+            let childrenType: "video" | "record" | "image";
+            if (type === "video" || type === "audio") {
+                await this.flush();
+            }
+            if (type === "video") childrenType = "video";
+            if (type === "audio") childrenType = "record";
+            if (type === "img") childrenType = "image";
             attrs = { ...attrs };
             attrs.file = attrs.src || attrs.url;
             delete attrs.src;
@@ -196,34 +197,44 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
             const cap = /^data:([\w/.+-]+);base64,/.exec(attrs.file);
             if (cap) attrs.file = "base64://" + attrs.file.slice(cap[0].length);
-            this.children.push({ type, data: attrs });
+            this.children.push({
+                type: childrenType,
+                data: {
+                    ...attrs,
+                    file: attrs.file
+                }
+            });
         } else if (type === "file") {
             await this.flush();
             await this.sendFile(attrs);
         } else if (type === "onebot:music") {
             await this.flush();
-            this.children.push({ type: "music", data: attrs });
-        } else if (type === "onebot:tts") {
-            await this.flush();
-            this.children.push({ type: "tts", data: attrs });
+            this.children.push({
+                type: "music",
+                data: {
+                    type: attrs.type,
+                    id: attrs.id,
+                    ...attrs
+                }
+            });
         } else if (type === "onebot:poke") {
             await this.flush();
-            this.children.push({ type: "poke", data: attrs });
-        } else if (type === "onebot:gift") {
-            await this.flush();
-            this.children.push({ type: "gift", data: attrs });
-        } else if (type === "onebot:share") {
-            await this.flush();
-            this.children.push({ type: "share", data: attrs });
+            this.children.push({
+                type: "poke",
+                data: {
+                    type: attrs.type || "poke",
+                    id: attrs.id,
+                    ...attrs
+                }
+            });
         } else if (type === "onebot:json") {
             await this.flush();
-            this.children.push({ type: "json", data: attrs });
-        } else if (type === "onebot:xml") {
-            await this.flush();
-            this.children.push({ type: "xml", data: attrs });
-        } else if (type === "onebot:cardimage") {
-            await this.flush();
-            this.children.push({ type: "cardimage", data: attrs });
+            this.children.push({
+                type: "json",
+                data: {
+                    data: attrs.data
+                }
+            });
         } else if (type === "author") {
             Object.assign(this.stack[0].author, attrs);
         } else if (type === "figure" && !this.bot.parent) {
@@ -238,7 +249,12 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             await this.flush();
         } else if (type === "quote") {
             await this.flush();
-            this.children.push({ type: "reply", data: attrs });
+            this.children.push({
+                type: "reply",
+                data: {
+                    id: attrs.id.toString()
+                }
+            });
         } else if (type === "message") {
             await this.flush();
             // qqguild does not support forward messages
