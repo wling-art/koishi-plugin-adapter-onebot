@@ -177,24 +177,16 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/23
             if (attrs.href) this.text(`（${attrs.href}）`);
         } else if (["video", "audio", "image", "img"].includes(type)) {
-            let childrenType: "video" | "record" | "image";
+            const typeMap = { video: "video", audio: "record", img: "image", image: "image" } as const;
+            const childrenType = typeMap[type as keyof typeof typeMap];
             if (type === "video" || type === "audio") {
                 await this.flush();
             }
-            if (type === "video") childrenType = "video";
-            if (type === "audio") childrenType = "record";
-            if (type === "img") childrenType = "image";
             attrs = { ...attrs };
-            attrs.file = attrs.src || attrs.url;
+            attrs.file = attrs.src || attrs.url || attrs.file;
             delete attrs.src;
             delete attrs.url;
-            if (attrs.cache) {
-                attrs.cache = 1;
-            } else {
-                attrs.cache = 0;
-            }
-            // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/30
-            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+            attrs.cache = attrs.cache ? 1 : 0;
             const cap = /^data:([\w/.+-]+);base64,/.exec(attrs.file);
             if (cap) attrs.file = "base64://" + attrs.file.slice(cap[0].length);
             this.children.push({
