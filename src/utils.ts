@@ -38,7 +38,9 @@ export function decodeGuild(group: GroupInfo): Universal.Guild {
 
 export const decodeGuildMember = (user: GroupMemberInfo, isBot: boolean = false): Universal.GuildMember => ({
     user: convertUser(user, isBot),
+    name: user.nickname,
     nick: user.card || user.nickname,
+    title: user.title,
     avatar: `https://q.qlogo.cn/headimg_dl?dst_uin=${user.user_id}&spec=640`,
     roles: [user.role]
 });
