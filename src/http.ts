@@ -42,6 +42,8 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBot<C
                     .digest("hex");
                 if (signature !== `sha1=${sig}`) return (ctx.status = 403);
             }
+            const bot = this.bots.find((bot) => bot.selfId === ctx.headers["x-self-id"].toString());
+            if (!bot) return (ctx.status = 403);
 
             if (!isBaseEvent(ctx.request.response.body)) return (ctx.status = 400);
             dispatchSession(bot, ctx.request.response.body);

@@ -20,7 +20,7 @@ export class WsClient<C extends Context = Context> extends Adapter.WsClient<C, O
     }
 
     prepare() {
-        const { token, endpoint } = this.bot.config;
+        const { token, endpoint } = this.bot.config as WsClient.Options & OneBot.BaseConfig;
         const http = this.ctx.http.extend(this.bot.config);
         if (token) http.config.headers.Authorization = `Bearer ${token}`;
         return http.ws(endpoint);
@@ -59,14 +59,14 @@ export class WsServer<C extends Context> extends Adapter<C, OneBot<C>> {
         super(ctx);
         this.logger = ctx.logger("onebot");
 
-        const { path = "/onebot" } = bot.config;
-        this.wsServer = ctx.server.ws(path, (socket, { headers }) => {
+        const { path = "/onebot" } = bot.config as WsServer.Options & OneBot.BaseConfig;
+        this.wsServer = ctx.server.ws(path, async (socket, { headers }) => {
             this.logger.debug("connected with", headers);
             if (headers["x-client-role"] !== "Universal") {
                 return socket.close(1008, "invalid x-client-role");
             }
-            // const selfId = headers["x-self-id"].toString();
-            // if (!bot) return socket.close(1008, "invalid x-self-id");
+            const bot = this.bots.find((bot) => bot.selfId === headers["x-self-id"].toString());
+            if (!bot) return socket.close(1008, "invalid x-self-id");
 
             bot[kSocket] = socket;
             accept(socket as Universal.WebSocket, bot);

@@ -15,8 +15,7 @@ export class OneBot<C extends Context = Context> extends Bot<C> {
 
     constructor(ctx: C, config: OneBot.Config) {
         super(ctx, config, "onebot");
-        this.selfId = config.selfId;
-        this.user.avatar = `http://q.qlogo.cn/headimg_dl?dst_uin=${config.selfId}&spec=640`;
+        this.selfId = this.userId = config.selfId;
         this.internal = new Internal(this);
         if (config.protocol === "http") {
             ctx.plugin(HttpServer, this);
