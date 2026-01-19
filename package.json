@@ -8,16 +8,16 @@
     "lib"
   ],
   "contributors": [
-    "MrlingXD <90316914+wling-art@users.noreply.github.com>"
+    "MrlingXD <90316914+CrashVibe@users.noreply.github.com>"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/wling-art/koishi-plugin-adapter-onebot",
+  "homepage": "https://github.com/CrashVibe/koishi-plugin-adapter-onebot",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wling-art/koishi-plugin-adapter-onebot.git"
+    "url": "git+https://github.com/CrashVibe/koishi-plugin-adapter-onebot.git"
   },
   "bugs": {
-    "url": "https://github.com/wling-art/koishi-plugin-adapter-onebot/issues"
+    "url": "https://github.com/CrashVibe/koishi-plugin-adapter-onebot/issues"
   },
   "keywords": [
     "bot",
