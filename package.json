@@ -1,6 +1,6 @@
 {
   "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "OneBot Adapter for Koishi",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
