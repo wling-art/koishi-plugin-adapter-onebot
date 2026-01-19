@@ -1,6 +1,6 @@
 {
   "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "OneBot Adapter for Koishi",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -14,7 +14,7 @@
   "homepage": "https://github.com/wling-art/koishi-plugin-adapter-onebot",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wling-art/koishi-plugin-adapter-onebot.git"
+    "url": "git+https://github.com/wling-art/koishi-plugin-adapter-onebot.git"
   },
   "bugs": {
     "url": "https://github.com/wling-art/koishi-plugin-adapter-onebot/issues"
