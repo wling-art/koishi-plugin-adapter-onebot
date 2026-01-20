@@ -54,7 +54,7 @@ export class OneBot<C extends Context = Context> extends Bot<C> {
         const data = await this.internal.getLoginInfo();
         this.user = {
             id: data.user_id.toString(),
-            username: data.nickname,
+            name: data.nickname,
             avatar: `http://q.qlogo.cn/headimg_dl?dst_uin=${data.user_id}&spec=640`,
             isBot: true
         };
