@@ -75,6 +75,7 @@ export class WsServer<C extends Context> extends Adapter<C, OneBot<C>> {
         ctx.on("dispose", () => {
             this.logger.debug("ws server closing");
             this.wsServer.close();
+            this.disconnect(bot);
         });
     }
 
@@ -120,6 +121,7 @@ export function accept(socket: Universal.WebSocket, bot: OneBot<Context>) {
         Object.keys(listeners).forEach((echo) => {
             delete listeners[Number(echo)];
         });
+        bot.adapter.disconnect(bot);
     });
 
     bot.internal._request = (action: string, params: Dict) => {
