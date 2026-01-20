@@ -37,19 +37,6 @@ export class Internal {
         }
         return data;
     }
-
-    async setGroupAnonymousBan(group_id: string, meta: string | object, duration?: number) {
-        const args = { group_id, duration };
-        args[typeof meta === "string" ? "flag" : "anonymous"] = meta;
-        await this._get("set_group_anonymous_ban", args);
-    }
-
-    async setGroupAnonymousBanAsync(group_id: string, meta: string | object, duration?: number) {
-        const args = { group_id, duration };
-        args[typeof meta === "string" ? "flag" : "anonymous"] = meta;
-        await this._get("set_group_anonymous_ban_async", args);
-    }
-
     // Messages
     async sendPrivateMsg(
         user_id: number,
@@ -58,14 +45,6 @@ export class Internal {
     ): Promise<number> {
         const data = await this._get("send_private_msg", { user_id, message, auto_escape });
         return data.message_id;
-    }
-
-    async sendPrivateMsgAsync(
-        user_id: number,
-        message: string | readonly CQCode.CQCodeUnion[],
-        auto_escape?: boolean
-    ): Promise<void> {
-        await this._get("send_private_msg_async", { user_id, message, auto_escape });
     }
 
     async sendGroupMsg(
@@ -77,21 +56,9 @@ export class Internal {
         return data.message_id;
     }
 
-    async sendGroupMsgAsync(
-        group_id: number,
-        message: string | readonly CQCode.CQCodeUnion[],
-        auto_escape?: boolean
-    ): Promise<void> {
-        await this._get("send_group_msg_async", { group_id, message, auto_escape });
-    }
-
     async sendGroupForwardMsg(group_id: number, messages: readonly CQCode.CQCodeUnion[]): Promise<number> {
         const data = await this._get("send_group_forward_msg", { group_id, messages });
         return data.message_id;
-    }
-
-    async sendGroupForwardMsgAsync(group_id: number, messages: readonly CQCode.CQCodeUnion[]): Promise<void> {
-        await this._get("send_group_forward_msg_async", { group_id, messages });
     }
 
     async sendPrivateForwardMsg(user_id: number, messages: readonly CQCode.CQCodeUnion[]): Promise<number> {
@@ -99,32 +66,16 @@ export class Internal {
         return data.message_id;
     }
 
-    async sendPrivateForwardMsgAsync(user_id: number, messages: readonly CQCode.CQCodeUnion[]): Promise<void> {
-        await this._get("send_private_forward_msg_async", { user_id, messages });
-    }
-
     async deleteMsg(message_id: number): Promise<void> {
         await this._get("delete_msg", { message_id });
-    }
-
-    async deleteMsgAsync(message_id: number): Promise<void> {
-        await this._get("delete_msg_async", { message_id });
     }
 
     async setEssenceMsg(message_id: number): Promise<void> {
         await this._get("set_essence_msg", { message_id });
     }
 
-    async setEssenceMsgAsync(message_id: number): Promise<void> {
-        await this._get("set_essence_msg_async", { message_id });
-    }
-
     async deleteEssenceMsg(message_id: number): Promise<void> {
         await this._get("delete_essence_msg", { message_id });
-    }
-
-    async deleteEssenceMsgAsync(message_id: number): Promise<void> {
-        await this._get("delete_essence_msg_async", { message_id });
     }
 
     async markMsgAsRead(message_id: number): Promise<void> {
@@ -135,16 +86,8 @@ export class Internal {
         await this._get("send_like", { user_id, times });
     }
 
-    async sendLikeAsync(user_id: number, times?: number): Promise<void> {
-        await this._get("send_like_async", { user_id, times });
-    }
-
     async sendGroupSign(group_id: number): Promise<void> {
         await this._get("send_group_sign", { group_id });
-    }
-
-    async sendGroupSignAsync(group_id: number): Promise<void> {
-        await this._get("send_group_sign_async", { group_id });
     }
 
     async getMsg(message_id: number): Promise<MessageEvent> {
@@ -177,24 +120,12 @@ export class Internal {
         await this._get("delete_friend", { user_id });
     }
 
-    async deleteFriendAsync(user_id: number): Promise<void> {
-        await this._get("delete_friend_async", { user_id });
-    }
-
     async deleteUnidirectionalFriend(user_id: number): Promise<void> {
         await this._get("delete_unidirectional_friend", { user_id });
     }
 
-    async deleteUnidirectionalFriendAsync(user_id: number): Promise<void> {
-        await this._get("delete_unidirectional_friend_async", { user_id });
-    }
-
     async setFriendAddRequest(flag: string, approve: boolean, remark?: string): Promise<void> {
         await this._get("set_friend_add_request", { flag, approve, remark });
-    }
-
-    async setFriendAddRequestAsync(flag: string, approve: boolean, remark?: string): Promise<void> {
-        await this._get("set_friend_add_request_async", { flag, approve, remark });
     }
 
     async setGroupAddRequest(
@@ -206,70 +137,33 @@ export class Internal {
         await this._get("set_group_add_request", { flag, sub_type: subType, approve, reason });
     }
 
-    async setGroupAddRequestAsync(
-        flag: string,
-        subType: "add" | "invite",
-        approve: boolean,
-        reason?: string
-    ): Promise<void> {
-        await this._get("set_group_add_request_async", { flag, sub_type: subType, approve, reason });
-    }
-
     // Group operations
     async setGroupKick(group_id: number, user_id: number, reject_add_request?: boolean): Promise<void> {
         await this._get("set_group_kick", { group_id, user_id, reject_add_request });
-    }
-
-    async setGroupKickAsync(group_id: number, user_id: number, reject_add_request?: boolean): Promise<void> {
-        await this._get("set_group_kick_async", { group_id, user_id, reject_add_request });
     }
 
     async setGroupBan(group_id: number, user_id: number, duration?: number): Promise<void> {
         await this._get("set_group_ban", { group_id, user_id, duration });
     }
 
-    async setGroupBanAsync(group_id: number, user_id: number, duration?: number): Promise<void> {
-        await this._get("set_group_ban_async", { group_id, user_id, duration });
-    }
-
     async setGroupWholeBan(group_id: number, enable?: boolean): Promise<void> {
         await this._get("set_group_whole_ban", { group_id, enable });
-    }
-
-    async setGroupWholeBanAsync(group_id: number, enable?: boolean): Promise<void> {
-        await this._get("set_group_whole_ban_async", { group_id, enable });
     }
 
     async setGroupAdmin(group_id: number, user_id: number, enable?: boolean): Promise<void> {
         await this._get("set_group_admin", { group_id, user_id, enable });
     }
 
-    async setGroupAdminAsync(group_id: number, user_id: number, enable?: boolean): Promise<void> {
-        await this._get("set_group_admin_async", { group_id, user_id, enable });
-    }
-
     async setGroupAnonymous(group_id: number, enable?: boolean): Promise<void> {
         await this._get("set_group_anonymous", { group_id, enable });
-    }
-
-    async setGroupAnonymousAsync(group_id: number, enable?: boolean): Promise<void> {
-        await this._get("set_group_anonymous_async", { group_id, enable });
     }
 
     async setGroupCard(group_id: number, user_id: number, card?: string): Promise<void> {
         await this._get("set_group_card", { group_id, user_id, card });
     }
 
-    async setGroupCardAsync(group_id: number, user_id: number, card?: string): Promise<void> {
-        await this._get("set_group_card_async", { group_id, user_id, card });
-    }
-
     async setGroupLeave(group_id: number, is_dismiss?: boolean): Promise<void> {
         await this._get("set_group_leave", { group_id, is_dismiss });
-    }
-
-    async setGroupLeaveAsync(group_id: number, is_dismiss?: boolean): Promise<void> {
-        await this._get("set_group_leave_async", { group_id, is_dismiss });
     }
 
     async setGroupSpecialTitle(
@@ -281,29 +175,12 @@ export class Internal {
         await this._get("set_group_special_title", { group_id, user_id, special_title, duration });
     }
 
-    async setGroupSpecialTitleAsync(
-        group_id: number,
-        user_id: number,
-        special_title?: string,
-        duration?: number
-    ): Promise<void> {
-        await this._get("set_group_special_title_async", { group_id, user_id, special_title, duration });
-    }
-
     async setGroupName(group_id: number, name: string): Promise<void> {
         await this._get("set_group_name", { group_id, group_name: name });
     }
 
-    async setGroupNameAsync(group_id: number, name: string): Promise<void> {
-        await this._get("set_group_name_async", { group_id, group_name: name });
-    }
-
     async setGroupPortrait(group_id: number, file: string, cache?: boolean): Promise<void> {
         await this._get("set_group_portrait", { group_id, file, cache });
-    }
-
-    async setGroupPortraitAsync(group_id: number, file: string, cache?: boolean): Promise<void> {
-        await this._get("set_group_portrait_async", { group_id, file, cache });
     }
 
     async getGroupAtAllRemain(group_id: number): Promise<GroupAtAllRemain> {
@@ -318,16 +195,6 @@ export class Internal {
         confirm_required?: number
     ): Promise<void> {
         await this._get("_send_group_notice", { group_id, content, image, pinned, confirm_required });
-    }
-
-    async sendGroupNoticeAsync(
-        group_id: number,
-        content: string,
-        image?: string,
-        pinned?: number,
-        confirm_required?: number
-    ): Promise<void> {
-        await this._get("_send_group_notice_async", { group_id, content, image, pinned, confirm_required });
     }
 
     async getGroupNotice(group_id: number): Promise<GroupNotice[]> {
@@ -351,16 +218,6 @@ export class Internal {
         personal_note: string
     ): Promise<void> {
         await this._get("set_qq_profile", { nickname, company, email, college, personal_note });
-    }
-
-    async setQqProfileAsync(
-        nickname: string,
-        company: string,
-        email: string,
-        college: string,
-        personal_note: string
-    ): Promise<void> {
-        await this._get("set_qq_profile_async", { nickname, company, email, college, personal_note });
     }
 
     async setQqAvatar(file: string): Promise<void> {
