@@ -1,15 +1,14 @@
-import { group } from "console";
-import { h, omit, Universal } from "koishi";
-import * as qface from "qface";
+import { Element, h, omit, Universal } from "koishi";
 import { OneBot } from "./bot";
 import { CQCode } from "./bot/cqcode";
 import { EventType, GroupMemberRole } from "./types/enum";
-import { BaseEvent } from "./types/event/base";
-import { isGroupMessageEvent, isMessageEvent, MessageEvent } from "./types/event/message";
+import type { BaseEvent } from "./types/event/base";
+import { isGroupMessageEvent, isMessageEvent, type MessageEvent } from "./types/event/message";
 import { isGroupPokeNotice, isNoticeEvent, NoticeType } from "./types/event/notice";
 import { isFriendRequest, isGroupRequest, isRequestEvent } from "./types/event/request";
-import { GroupInfo, GroupMemberInfo } from "./types/group";
-import { UserInfo } from "./types/user";
+import type { GroupInfo, GroupMemberInfo } from "./types/group";
+import type { UserInfo } from "./types/user";
+import * as qface from "qface";
 
 export * from "./types";
 
@@ -51,8 +50,7 @@ export async function decodeMessage(
     message: Universal.Message = {},
     payload: Universal.MessageLike = message
 ) {
-    const [guildId, channelId] = decodeGroupChannelId(event);
-
+    const [_, channelId] = decodeGroupChannelId(event);
     // message content
     const chain = CQCode.parse(event.message);
 
@@ -65,52 +63,69 @@ export async function decodeMessage(
             if (attrs.qq !== "all")
                 return h.at(attrs.qq, {
                     name: attrs.name,
-                    ...omit(attrs, [attrs.qq ? "qq" : undefined, attrs.name ? "name" : undefined])
+                    ...omit(
+                        attrs,
+                        [attrs.qq ? "qq" : undefined, attrs.name ? "name" : undefined].filter((k): k is string => !!k)
+                    )
                 });
             return h.at("at", {
                 type: "all",
-                ...omit(attrs, [attrs.qq ? "qq" : undefined, attrs.name ? "name" : undefined])
+                ...omit(
+                    attrs,
+                    [attrs.qq ? "qq" : undefined, attrs.name ? "name" : undefined].filter((k): k is string => !!k)
+                )
             });
         },
         face(attrs: CQCode.Face["data"]) {
             const name = qface.get(attrs.id)?.QDes.slice(1);
-            return h("face", { id: attrs.id, name, platform: bot.platform }, [h.image(qface.getUrl(attrs.id))]);
+            return h("face", { id: attrs.id, name }, [h.image(qface.getUrl(attrs.id))]);
         },
         image(attrs: CQCode.Image["data"]) {
             return h.image(attrs.url || attrs.file, {
                 title: attrs.name || undefined,
-                ...omit(attrs, [
-                    attrs.name ? "name" : undefined,
-                    attrs.url ? "url" : undefined,
-                    attrs.file ? "file" : undefined
-                ])
+                ...omit(
+                    [
+                        attrs.name ? "name" : undefined,
+                        attrs.url ? "url" : undefined,
+                        attrs.file ? "file" : undefined
+                    ].filter((k): k is string => !!k),
+                )
             });
         },
         record(attrs: CQCode.Record["data"]) {
             return h.audio(attrs.url || attrs.file, {
-                ...omit(attrs, [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined])
+                ...omit(
+                    [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined].filter((k): k is string => !!k),
+                )
             });
         },
         video(attrs: CQCode.Video["data"]) {
             return h.video(attrs.url || attrs.file, {
-                ...omit(attrs, [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined])
+                ...omit(
+                    [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined].filter((k): k is string => !!k),
+                )
             });
         },
         file(attrs: CQCode.File["data"]) {
             return h.file(attrs.url || attrs.file, {
-                ...omit(attrs, [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined])
+                ...omit(
+                    [attrs.url ? "url" : undefined, attrs.file ? "file" : undefined].filter((k): k is string => !!k),
+                )
             });
         },
         reply(attrs: CQCode.Reply["data"]) {
             return h("reply", { id: attrs.id });
         }
     });
-    if (message.elements[0].type === "reply") {
+
+    if (message.elements[0] && message.elements[0].type === "reply") {
         const reply = message.elements.shift();
-        message.quote = await bot.getMessage(channelId, reply.attrs.id).catch((error) => {
-            bot.logger.warn(error);
-            return undefined;
-        });
+        if (reply) {
+            message.quote = await bot.getMessage(channelId, reply.attrs.id).catch((error) => {
+                bot.logger.warn(error);
+                return undefined;
+            });
+        }
     }
     message.content = message.elements.join("");
     payload.timestamp = event.time * 1000;
@@ -134,18 +149,17 @@ export async function decodeMessage(
             name: event.sender.nickname,
             nick: event.sender.card,
             avatar: `https://q.qlogo.cn/headimg_dl?dst_uin=${event.user_id}&spec=640`,
-            roles: [event.sender.role]
+            roles: event.sender.role ? [event.sender.role] : []
         };
     }
     return message;
 }
 
-const decodeGroupChannelId = (event: MessageEvent) => {
+const decodeGroupChannelId = (event: MessageEvent): [string | undefined, string] => {
     if (event.message_type === "group") {
         return [event.group_id.toString(), event.group_id.toString()];
-    } else {
-        return [undefined, "private:" + event.sender.user_id];
     }
+    return [undefined, "private:" + event.sender.user_id];
 };
 
 export const adaptGuild = (info: GroupInfo): Universal.Guild => {

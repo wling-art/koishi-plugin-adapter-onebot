@@ -1,4 +1,4 @@
-import { Dict } from "koishi";
+import type { Dict } from "koishi";
 import { CQCode } from "../bot/cqcode";
 
 /** OneBot API 响应格式 */

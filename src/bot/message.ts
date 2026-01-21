@@ -1,8 +1,7 @@
-import { Context, Dict, h, MessageEncoder, pick, Universal } from "koishi";
+import { Context, h, MessageEncoder, pick, Universal, type Dict } from "koishi";
 import { fileURLToPath } from "node:url";
 import { OneBot } from ".";
 import { CQCode } from "./cqcode";
-
 export interface Author extends Universal.User {
     time?: string | number;
     messageId?: string;
@@ -22,11 +21,11 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
     children: CQCode.CQCodeUnion[] = [];
 
     override async prepare(): Promise<void> {
-        super.prepare();
+        await super.prepare();
         const {
             event: { channel }
         } = this.session;
-        if (!channel.type) {
+        if (channel && !channel.type) {
             channel.type = channel.id.startsWith(PRIVATE_PFX)
                 ? Universal.Channel.Type.DIRECT
                 : Universal.Channel.Type.TEXT;
@@ -37,11 +36,11 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
     }
 
     async forward() {
-        if (!this.stack[0].children.length) return;
+        if (!this.stack[0] || !this.stack[0].children.length) return;
         const session = this.bot.session();
         session.content = "";
         session.messageId =
-            this.session.event.channel.type === Universal.Channel.Type.DIRECT
+            this.session.event.channel?.type === Universal.Channel.Type.DIRECT
                 ? (
                       await this.bot.internal.sendPrivateForwardMsg(
                           Number(this.channelId.slice(PRIVATE_PFX.length)),

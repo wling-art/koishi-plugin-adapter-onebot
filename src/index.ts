@@ -1,4 +1,4 @@
-import { Session } from "koishi";
+import type { Session } from "koishi";
 import { OneBot } from "./bot";
 import { Internal } from "./internal";
 
@@ -10,12 +10,12 @@ export * from "./ws";
 
 export default OneBot;
 
-declare module "@satorijs/core" {
+declare module "koishi" {
     interface Session {
         onebot?: Internal & {
             targetId?: string;
             duration?: number;
-        };
+        }; // TODO: onebot event value
     }
 }
 

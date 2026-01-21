@@ -1,4 +1,4 @@
-import { Bot, Context, Schema, Session, Universal } from "koishi";
+import { Bot, Context, Schema, type Session, Universal } from "koishi";
 import { HttpServer } from "../http";
 import { Internal } from "../internal";
 import { MessageEvent } from "../types/event/message";

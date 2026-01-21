@@ -1,7 +1,7 @@
 import { WebSocketLayer } from "@koishijs/plugin-server";
-import { Adapter, Context, Dict, HTTP, Logger, Schema, Time, Universal } from "koishi";
+import { Adapter, Context, HTTP, Logger, Schema, Time, Universal, type Dict } from "koishi";
 import { OneBot } from "./bot";
-import { ApiResponse, dispatchSession, TimeoutError } from "./utils";
+import { type ApiResponse, dispatchSession, TimeoutError } from "./utils";
 
 export interface SharedConfig<T = "ws" | "ws-reverse"> {
     protocol: T;
@@ -109,7 +109,7 @@ export function accept(socket: Universal.WebSocket, bot: OneBot<Context>) {
 
         if ("post_type" in parsed) {
             bot.logger.debug("[receive] %o", parsed);
-            await dispatchSession(bot, parsed);
+            void dispatchSession(bot, parsed);
         } else if (parsed.echo in listeners) {
             listeners[parsed.echo](parsed);
             delete listeners[parsed.echo];

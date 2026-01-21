@@ -1,7 +1,7 @@
-import { Dict } from "koishi";
+import { type Dict } from "koishi";
 import { OneBot } from "./bot";
 import { CQCode } from "./bot/cqcode";
-import {
+import type {
     EssenceMessage,
     FriendInfo,
     GetCredentialsResponse,
@@ -16,19 +16,22 @@ import {
     ModelVariant,
     UnidirectionalFriendInfo
 } from "./types";
-import { Device } from "./types/device";
+import type { Device } from "./types/device";
 import { HonorType, SafetyLevel } from "./types/enum";
-import { GroupMessageEvent, MessageEvent } from "./types/event/message";
-import { GroupInfo, GroupMemberInfo } from "./types/group";
+import type { GroupMessageEvent, MessageEvent } from "./types/event/message";
+import type { GroupInfo, GroupMemberInfo } from "./types/group";
 import { SenderError } from "./types/sender";
-import { UserInfo } from "./types/user";
+import type { UserInfo } from "./types/user";
 
 export class Internal {
-    _request: (action: string, params: Dict) => Promise<any>;
+    _request?: (action: string, params: Dict) => Promise<any>;
     constructor(public readonly bot: OneBot) {}
 
     private async _get(action: string, params = {}): Promise<any> {
         this.bot.logger.debug("[request] %s %o", action, params);
+        if (!this._request) {
+            throw new Error("适配器未连接");
+        }
         const response = await this._request(action, params);
         this.bot.logger.debug("[response] %o", response);
         const { data, retcode } = response;

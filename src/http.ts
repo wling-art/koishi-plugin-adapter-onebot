@@ -30,7 +30,7 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBot<C
 
     async connect(bot: OneBot<C>) {
         const { secret, path = "/onebot" } = bot.config;
-        this.ctx.server.post(path, (ctx) => {
+        this.ctx.server.post(path, async (ctx) => {
             if (secret) {
                 // no signature
                 const signature = ctx.headers["x-signature"];
@@ -46,7 +46,7 @@ export class HttpServer<C extends Context = Context> extends Adapter<C, OneBot<C
             if (!bot) return (ctx.status = 403);
 
             if (!isBaseEvent(ctx.request.response.body)) return (ctx.status = 400);
-            dispatchSession(bot, ctx.request.response.body);
+            void dispatchSession(bot, ctx.request.response.body);
         });
     }
 
