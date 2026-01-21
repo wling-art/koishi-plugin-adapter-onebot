@@ -5,6 +5,7 @@ import { MessageEvent } from "../types/event/message";
 import { adaptChannel, adaptGuild, convertUser, decodeGuildMember, decodeMessage } from "../utils";
 import { WsClient, WsServer } from "../ws";
 import { OneBotMessageEncoder, PRIVATE_PFX } from "./message";
+export { CQCode } from "./cqcode";
 
 export class OneBot<C extends Context = Context> extends Bot<C> {
     static MessageEncoder = OneBotMessageEncoder;
@@ -38,7 +39,10 @@ export class OneBot<C extends Context = Context> extends Bot<C> {
     }
 
     async createDirectChannel(userId: string) {
-        return { id: `${PRIVATE_PFX}${userId}`, type: Universal.Channel.Type.DIRECT };
+        return {
+            id: `${PRIVATE_PFX}${userId}`,
+            type: Universal.Channel.Type.DIRECT
+        };
     }
 
     async getMessage(channelId: string, messageId: string) {
@@ -68,7 +72,9 @@ export class OneBot<C extends Context = Context> extends Bot<C> {
 
     async getFriendList() {
         const data = await this.internal.getFriendList();
-        return { data: data.map((item) => convertUser(item, this.selfId === item.user_id.toString())) };
+        return {
+            data: data.map((item) => convertUser(item, this.selfId === item.user_id.toString()))
+        };
     }
 
     async handleFriendRequest(messageId: string, approve: boolean, comment?: string) {
@@ -101,7 +107,9 @@ export class OneBot<C extends Context = Context> extends Bot<C> {
         }
 
         // 从旧到新
-        return { data: await Promise.all(list.map((item) => decodeMessage(this, item))) };
+        return {
+            data: await Promise.all(list.map((item) => decodeMessage(this, item)))
+        };
     }
 
     async getChannel(channelId: string) {

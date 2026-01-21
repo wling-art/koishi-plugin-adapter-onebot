@@ -8,8 +8,14 @@ export function CQCode(type: string, attrs: Dict<string>) {
     }
     return output + "]";
 }
+
+/** CQ 码接口 */
 export interface CQCode<T extends string = string, D = Dict<string>> {
+    /**
+     * 消息类型
+     */
     type: T;
+    /** 消息数据 */
     data: D;
 }
 
@@ -231,7 +237,7 @@ export namespace CQCode {
             /** 更多字段 */
             [property: string]: unknown;
         }
-        > { }
+    > {}
     /**
      * XML 消息
      */
@@ -305,7 +311,11 @@ export namespace CQCode {
         while ((result = from(source))) {
             const { type, data, capture } = result;
             if (capture.index) {
-                elements.push(h("text", { content: unescape(source.slice(0, capture.index)) }));
+                elements.push(
+                    h("text", {
+                        content: unescape(source.slice(0, capture.index))
+                    })
+                );
             }
             elements.push(h(type, data));
             source = source.slice(capture.index + capture[0].length);

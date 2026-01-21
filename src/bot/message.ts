@@ -162,7 +162,10 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             if (attrs.type === "all") {
                 this.children.push({ type: "at", data: { qq: "all" } });
             } else {
-                this.children.push({ type: "at", data: { qq: attrs.id, name: attrs.name } });
+                this.children.push({
+                    type: "at",
+                    data: { qq: attrs.id, name: attrs.name }
+                });
             }
         } else if (type === "sharp") {
             if (attrs.id) this.text(attrs.id);
@@ -177,7 +180,12 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             // https://github.com/koishijs/koishi-plugin-adapter-onebot/issues/23
             if (attrs.href) this.text(`（${attrs.href}）`);
         } else if (["video", "audio", "image", "img"].includes(type)) {
-            const typeMap = { video: "video", audio: "record", img: "image", image: "image" } as const;
+            const typeMap = {
+                video: "video",
+                audio: "record",
+                img: "image",
+                image: "image"
+            } as const;
             const childrenType = typeMap[type as keyof typeof typeMap];
             if (type === "video" || type === "audio") {
                 await this.flush();

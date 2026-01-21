@@ -1,62 +1,62 @@
 {
-  "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-  "version": "0.2.5",
-  "description": "OneBot Adapter for Koishi",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
-  "files": [
-    "lib"
-  ],
-  "contributors": [
-    "MrlingXD <90316914+CrashVibe@users.noreply.github.com>"
-  ],
-  "license": "MIT",
-  "homepage": "https://github.com/CrashVibe/koishi-plugin-adapter-onebot",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CrashVibe/koishi-plugin-adapter-onebot.git"
-  },
-  "bugs": {
-    "url": "https://github.com/CrashVibe/koishi-plugin-adapter-onebot/issues"
-  },
-  "keywords": [
-    "bot",
-    "chatbot",
-    "koishi",
-    "plugin",
-    "adapter",
-    "onebot",
-    "im",
-    "chat"
-  ],
-  "koishi": {
-    "description": {
-      "en": "OneBot Adapter for Koishi",
-      "zh": "OneBot 适配器"
+    "name": "@mrlingxd/koishi-plugin-adapter-onebot",
+    "version": "0.2.5",
+    "description": "OneBot Adapter for Koishi",
+    "keywords": [
+        "adapter",
+        "bot",
+        "chat",
+        "chatbot",
+        "im",
+        "koishi",
+        "onebot",
+        "plugin"
+    ],
+    "homepage": "https://github.com/CrashVibe/koishi-plugin-adapter-onebot",
+    "bugs": {
+        "url": "https://github.com/CrashVibe/koishi-plugin-adapter-onebot/issues"
     },
-    "service": {
-      "implements": [
-        "adapter"
-      ]
+    "license": "MIT",
+    "contributors": [
+        "MrlingXD <90316914+CrashVibe@users.noreply.github.com>"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/CrashVibe/koishi-plugin-adapter-onebot.git"
+    },
+    "files": [
+        "lib"
+    ],
+    "main": "lib/index.js",
+    "typings": "lib/index.d.ts",
+    "scripts": {
+        "build": "atsc -b"
+    },
+    "devDependencies": {
+        "@cordisjs/eslint-config": "^1.1.1",
+        "@koishijs/plugin-server": "^3.2.7",
+        "@types/node": "^25.0.9",
+        "atsc": "^2.1.0",
+        "esbuild": "^0.27.2",
+        "esbuild-register": "^3.6.0",
+        "eslint": "^9.39.2",
+        "koishi": "^4.18.10",
+        "qface": "^1.4.1",
+        "typescript": "^5.9.3",
+        "yml-register": "^1.2.5"
+    },
+    "peerDependencies": {
+        "koishi": "^4.18.6"
+    },
+    "koishi": {
+        "description": {
+            "en": "OneBot Adapter for Koishi",
+            "zh": "OneBot 适配器"
+        },
+        "service": {
+            "implements": [
+                "adapter"
+            ]
+        }
     }
-  },
-  "scripts": {
-    "build": "atsc -b"
-  },
-  "devDependencies": {
-    "@cordisjs/eslint-config": "^1.1.1",
-    "@koishijs/plugin-server": "^3.2.7",
-    "@types/node": "^25.0.9",
-    "atsc": "^2.1.0",
-    "esbuild": "^0.27.2",
-    "esbuild-register": "^3.6.0",
-    "eslint": "^9.39.2",
-    "koishi": "^4.18.10",
-    "qface": "^1.4.1",
-    "typescript": "^5.9.3",
-    "yml-register": "^1.2.5"
-  },
-  "peerDependencies": {
-    "koishi": "^4.18.6"
-  }
 }

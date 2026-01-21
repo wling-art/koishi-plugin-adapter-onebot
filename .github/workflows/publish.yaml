@@ -1,57 +1,56 @@
 name: NPM Publish
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+    workflow_dispatch:
+    push:
+        branches:
+            - main
 
 permissions:
-  id-token: write
-  contents: write
+    id-token: write
+    contents: write
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+    publish:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "24"
 
-      - name: Get version from package.json
-        id: project_version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+            - name: Get version from package.json
+              id: project_version
+              run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Check if version already exists
-        id: check_version
-        run: |
-          VERSION=${{ steps.project_version.outputs.version }}
-          if git ls-remote --tags origin | grep -q "refs/tags/v${VERSION}$"; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Version v${VERSION} already exists, skipping release"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Version v${VERSION} is new, will create release"
-          fi
+            - name: Check if version already exists
+              id: check_version
+              run: |
+                  VERSION=${{ steps.project_version.outputs.version }}
+                  if git ls-remote --tags origin | grep -q "refs/tags/v${VERSION}$"; then
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                    echo "Version v${VERSION} already exists, skipping release"
+                  else
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                    echo "Version v${VERSION} is new, will create release"
+                  fi
 
-      - name: Publish to npm
-        if: steps.check_version.outputs.exists == 'false'
-        run: |
-          yarn install --frozen-lockfile
-          yarn build
-          npm publish
+            - name: Publish to npm
+              if: steps.check_version.outputs.exists == 'false'
+              run: |
+                  yarn install --frozen-lockfile
+                  yarn build
+                  npm publish
 
-      - name: Create and push tag
-        if: steps.check_version.outputs.exists == 'false'
-        run: |
-          VERSION=${{ steps.project_version.outputs.version }}
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag "v${VERSION}"
-          git push origin "v${VERSION}"
-
+            - name: Create and push tag
+              if: steps.check_version.outputs.exists == 'false'
+              run: |
+                  VERSION=${{ steps.project_version.outputs.version }}
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+                  git tag "v${VERSION}"
+                  git push origin "v${VERSION}"

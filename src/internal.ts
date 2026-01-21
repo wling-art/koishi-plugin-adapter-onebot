@@ -43,7 +43,11 @@ export class Internal {
         message: string | readonly CQCode.CQCodeUnion[],
         auto_escape?: boolean
     ): Promise<number> {
-        const data = await this._get("send_private_msg", { user_id, message, auto_escape });
+        const data = await this._get("send_private_msg", {
+            user_id,
+            message,
+            auto_escape
+        });
         return data.message_id;
     }
 
@@ -52,17 +56,33 @@ export class Internal {
         message: string | readonly CQCode.CQCodeUnion[],
         auto_escape?: boolean
     ): Promise<number> {
-        const data = await this._get("send_group_msg", { group_id, message, auto_escape });
+        const data = await this._get("send_group_msg", {
+            group_id,
+            message,
+            auto_escape
+        });
         return data.message_id;
     }
 
-    async sendGroupForwardMsg(group_id: number, messages: readonly CQCode.CQCodeUnion[]): Promise<number> {
-        const data = await this._get("send_group_forward_msg", { group_id, messages });
+    async sendGroupForwardMsg(
+        group_id: number,
+        messages: readonly CQCode.MergeForward[] | CQCode.Forward
+    ): Promise<number> {
+        const data = await this._get("send_group_forward_msg", {
+            group_id,
+            messages
+        });
         return data.message_id;
     }
 
-    async sendPrivateForwardMsg(user_id: number, messages: readonly CQCode.CQCodeUnion[]): Promise<number> {
-        const data = await this._get("send_private_forward_msg", { user_id, messages });
+    async sendPrivateForwardMsg(
+        user_id: number,
+        messages: readonly CQCode.MergeForward[] | CQCode.Forward
+    ): Promise<number> {
+        const data = await this._get("send_private_forward_msg", {
+            user_id,
+            messages
+        });
         return data.message_id;
     }
 
@@ -113,7 +133,10 @@ export class Internal {
     }
 
     async getGroupMsgHistory(group_id: number, message_seq?: number): Promise<{ messages: GroupMessageEvent[] }> {
-        return await this._get("get_group_msg_history", { group_id, message_seq });
+        return await this._get("get_group_msg_history", {
+            group_id,
+            message_seq
+        });
     }
 
     async deleteFriend(user_id: number): Promise<void> {
@@ -134,12 +157,21 @@ export class Internal {
         approve: boolean,
         reason?: string
     ): Promise<void> {
-        await this._get("set_group_add_request", { flag, sub_type: subType, approve, reason });
+        await this._get("set_group_add_request", {
+            flag,
+            sub_type: subType,
+            approve,
+            reason
+        });
     }
 
     // Group operations
     async setGroupKick(group_id: number, user_id: number, reject_add_request?: boolean): Promise<void> {
-        await this._get("set_group_kick", { group_id, user_id, reject_add_request });
+        await this._get("set_group_kick", {
+            group_id,
+            user_id,
+            reject_add_request
+        });
     }
 
     async setGroupBan(group_id: number, user_id: number, duration?: number): Promise<void> {
@@ -172,7 +204,12 @@ export class Internal {
         special_title?: string,
         duration?: number
     ): Promise<void> {
-        await this._get("set_group_special_title", { group_id, user_id, special_title, duration });
+        await this._get("set_group_special_title", {
+            group_id,
+            user_id,
+            special_title,
+            duration
+        });
     }
 
     async setGroupName(group_id: number, name: string): Promise<void> {
@@ -194,7 +231,13 @@ export class Internal {
         pinned?: number,
         confirm_required?: number
     ): Promise<void> {
-        await this._get("_send_group_notice", { group_id, content, image, pinned, confirm_required });
+        await this._get("_send_group_notice", {
+            group_id,
+            content,
+            image,
+            pinned,
+            confirm_required
+        });
     }
 
     async getGroupNotice(group_id: number): Promise<GroupNotice[]> {
@@ -217,7 +260,13 @@ export class Internal {
         college: string,
         personal_note: string
     ): Promise<void> {
-        await this._get("set_qq_profile", { nickname, company, email, college, personal_note });
+        await this._get("set_qq_profile", {
+            nickname,
+            company,
+            email,
+            college,
+            personal_note
+        });
     }
 
     async setQqAvatar(file: string): Promise<void> {
@@ -225,7 +274,11 @@ export class Internal {
     }
 
     async setOnlineStatus(status: string, extStatus: string, batteryStatus: string): Promise<void> {
-        await this._get("set_online_status", { status, ext_status: extStatus, battery_status: batteryStatus });
+        await this._get("set_online_status", {
+            status,
+            ext_status: extStatus,
+            battery_status: batteryStatus
+        });
     }
 
     async getStrangerInfo(user_id: number, no_cache?: boolean): Promise<UserInfo> {
@@ -249,7 +302,11 @@ export class Internal {
     }
 
     async getGroupMemberInfo(group_id: number, user_id: number, no_cache?: boolean): Promise<GroupMemberInfo> {
-        return await this._get("get_group_member_info", { group_id, user_id, no_cache });
+        return await this._get("get_group_member_info", {
+            group_id,
+            user_id,
+            no_cache
+        });
     }
 
     async getGroupMemberList(group_id: number, no_cache?: boolean): Promise<GroupMemberInfo[]> {
@@ -274,16 +331,27 @@ export class Internal {
     }
 
     async getGroupFilesByFolder(group_id: number, folder_id: string): Promise<GroupFileList> {
-        return await this._get("get_group_files_by_folder", { group_id, folder_id });
+        return await this._get("get_group_files_by_folder", {
+            group_id,
+            folder_id
+        });
     }
 
     async getGroupFileUrl(group_id: number, file_id: string, busid: number): Promise<string> {
-        const data = await this._get("get_group_file_url", { group_id, file_id, busid });
+        const data = await this._get("get_group_file_url", {
+            group_id,
+            file_id,
+            busid
+        });
         return data.url;
     }
 
     async downloadFile(url: string, headers?: string | readonly string[], thread_count?: number): Promise<string> {
-        const data = await this._get("download_file", { url, headers, thread_count });
+        const data = await this._get("download_file", {
+            url,
+            headers,
+            thread_count
+        });
         return data.file;
     }
 
@@ -296,7 +364,11 @@ export class Internal {
     }
 
     async createGroupFileFolder(group_id: number, folder_id: string, name: string): Promise<void> {
-        await this._get("create_group_file_folder", { group_id, folder_id, name });
+        await this._get("create_group_file_folder", {
+            group_id,
+            folder_id,
+            name
+        });
     }
 
     async deleteGroupFolder(group_id: number, folder_id: string): Promise<void> {
@@ -304,7 +376,12 @@ export class Internal {
     }
 
     async deleteGroupFile(group_id: number, folder_id: string, file_id: string, busid: number): Promise<void> {
-        await this._get("delete_group_file", { group_id, folder_id, file_id, busid });
+        await this._get("delete_group_file", {
+            group_id,
+            folder_id,
+            file_id,
+            busid
+        });
     }
 
     async getOnlineClients(no_cache?: boolean): Promise<Device[]> {
@@ -398,7 +475,11 @@ export class Internal {
     }
 
     async getPrivateFileUrl(user_id: number, file_id: string, file_hash?: string): Promise<string> {
-        const data = await this._get("get_private_file_url", { user_id, file_id, file_hash });
+        const data = await this._get("get_private_file_url", {
+            user_id,
+            file_id,
+            file_hash
+        });
         return data.url;
     }
 
@@ -408,7 +489,12 @@ export class Internal {
         parent_directory: string,
         target_directory: string
     ): Promise<void> {
-        await this._get("move_group_file", { group_id, file_id, parent_directory, target_directory });
+        await this._get("move_group_file", {
+            group_id,
+            file_id,
+            parent_directory,
+            target_directory
+        });
     }
 
     async deleteGroupFileFolder(group_id: number, folder_id: string): Promise<void> {
@@ -416,6 +502,10 @@ export class Internal {
     }
 
     async renameGroupFileFolder(group_id: number, folder_id: string, new_folder_name: string): Promise<void> {
-        await this._get("rename_group_file_folder", { group_id, folder_id, new_folder_name });
+        await this._get("rename_group_file_folder", {
+            group_id,
+            folder_id,
+            new_folder_name
+        });
     }
 }
