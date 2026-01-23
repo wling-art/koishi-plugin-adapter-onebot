@@ -2,6 +2,7 @@ import { Context, h, MessageEncoder, pick, Universal, type Dict } from "koishi";
 import { fileURLToPath } from "node:url";
 import { OneBot } from ".";
 import { CQCode } from "./cqcode";
+
 export interface Author extends Universal.User {
     time?: string | number;
     messageId?: string;
@@ -39,17 +40,14 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
         if (!this.stack[0] || !this.stack[0].children.length) return;
         const session = this.bot.session();
         session.content = "";
-        session.messageId =
-            this.session.event.channel?.type === Universal.Channel.Type.DIRECT
-                ? (
-                      await this.bot.internal.sendPrivateForwardMsg(
-                          Number(this.channelId.slice(PRIVATE_PFX.length)),
-                          this.stack[0].children
-                      )
-                  ).toString()
-                : (
-                      await this.bot.internal.sendGroupForwardMsg(Number(this.channelId), this.stack[0].children)
-                  ).toString();
+        session.messageId = this.session.event.channel?.type === Universal.Channel.Type.DIRECT
+            ? (
+                  await this.bot.internal.sendPrivateForwardMsg(
+                      Number(this.channelId.slice(PRIVATE_PFX.length)),
+                      this.stack[0].children
+                  )
+              ).toString()
+            : (await this.bot.internal.sendGroupForwardMsg(Number(this.channelId), this.stack[0].children)).toString();
         session.userId = this.bot.selfId;
         session.channelId = this.session.channelId;
         session.guildId = this.session.guildId;
@@ -84,9 +82,9 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             this.stack[1].children.push({
                 type: "node",
                 data: {
-                    user_id: author.messageId,
+                    user_id: author.id,
                     nickname: author.nick || author.name,
-                    content: []
+                    content: this.children
                 }
             });
 
@@ -256,7 +254,6 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
             });
         } else if (type === "message") {
             await this.flush();
-            // qqguild does not support forward messages
             if ("forward" in attrs && !this.bot.parent) {
                 this.stack.unshift(new State("forward"));
                 await this.render(children);
