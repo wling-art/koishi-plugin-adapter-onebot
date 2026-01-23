@@ -1,6 +1,6 @@
 {
     "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "description": "OneBot Adapter for Koishi",
     "keywords": [
         "adapter",
