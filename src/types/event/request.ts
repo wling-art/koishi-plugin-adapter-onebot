@@ -1,5 +1,5 @@
 import { EventType } from "../enum";
-import { BaseEvent } from "./base";
+import type { BaseEvent } from "./base";
 
 /** 请求事件 */
 export interface RequestEvent<request_type extends "friend" | "group"> extends BaseEvent<EventType.REQUEST> {

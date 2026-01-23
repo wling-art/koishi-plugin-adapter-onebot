@@ -1,7 +1,8 @@
-import { WebSocketLayer } from "@koishijs/plugin-server";
-import { Adapter, Context, HTTP, Logger, Schema, Time, Universal, type Dict } from "koishi";
-import { OneBot } from "./bot";
-import { type ApiResponse, dispatchSession, TimeoutError } from "./utils";
+import type { WebSocketLayer } from "@koishijs/plugin-server";
+import type { Context, Logger} from "koishi";
+import { Adapter, HTTP, Schema, Time, Universal, type Dict } from "koishi";
+import type { OneBot } from "./bot";
+import { dispatchSession, TimeoutError, type ApiResponse } from "./utils";
 
 export interface SharedConfig<T = "ws" | "ws-reverse"> {
     protocol: T;
@@ -72,10 +73,10 @@ export class WsServer<C extends Context> extends Adapter<C, OneBot<C>> {
             accept(socket as Universal.WebSocket, bot);
         });
 
-        ctx.on("dispose", () => {
+        ctx.on("dispose",async () => {
             this.logger.debug("ws server closing");
             this.wsServer.close();
-            this.disconnect(bot);
+            await this.disconnect(bot);
         });
     }
 
@@ -116,12 +117,12 @@ export function accept(socket: Universal.WebSocket, bot: OneBot<Context>) {
         }
     });
 
-    socket.addEventListener("close", () => {
+    socket.addEventListener("close", async () => {
         delete bot.internal._request;
         Object.keys(listeners).forEach((echo) => {
             delete listeners[Number(echo)];
         });
-        bot.adapter.disconnect(bot);
+        await bot.adapter.disconnect(bot);
     });
 
     bot.internal._request = (action: string, params: Dict) => {
@@ -147,5 +148,5 @@ export function accept(socket: Universal.WebSocket, bot: OneBot<Context>) {
         ]);
     };
 
-    bot.initialize();
+    void bot.initialize();
 }

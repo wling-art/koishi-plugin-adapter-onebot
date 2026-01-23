@@ -1,6 +1,6 @@
 import type { Session } from "koishi";
 import { OneBot } from "./bot";
-import { Internal } from "./internal";
+import type { Internal } from "./internal";
 
 export { OneBot };
 

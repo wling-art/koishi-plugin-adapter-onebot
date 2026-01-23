@@ -1,7 +1,8 @@
-import { Bot, Context, Schema, type Session, Universal } from "koishi";
+import type { Context} from "koishi";
+import { Bot, Schema, type Session, Universal } from "koishi";
 import { HttpServer } from "../http";
 import { Internal } from "../internal";
-import { MessageEvent } from "../types/event/message";
+import { type MessageEvent } from "../types/event/message";
 import { adaptChannel, adaptGuild, convertUser, decodeGuildMember, decodeMessage } from "../utils";
 import { WsClient, WsServer } from "../ws";
 import { OneBotMessageEncoder, PRIVATE_PFX } from "./message";

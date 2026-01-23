@@ -1,5 +1,5 @@
 import type { Dict } from "koishi";
-import { CQCode } from "../bot/cqcode";
+import type { CQCode } from "../bot/cqcode";
 
 /** OneBot API 响应格式 */
 export interface ApiResponse<T = Dict> {

@@ -1,5 +1,5 @@
-import { EventType } from "../enum";
-import { BaseEvent } from "./base";
+import type { EventType } from "../enum";
+import type { BaseEvent } from "./base";
 
 /** 元事件 */
 interface MetaEvent<meta_event_type extends "lifecycle" | "heartbeat"> extends BaseEvent<EventType.META> {

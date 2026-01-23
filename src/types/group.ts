@@ -1,5 +1,5 @@
-import { GroupMemberRole } from "./enum";
-import { UserInfo } from "./user";
+import type { GroupMemberRole } from "./enum";
+import type { UserInfo } from "./user";
 
 export interface GroupInfo {
     /** 群号 */

@@ -1,7 +1,7 @@
-import { CQCode } from "../../bot/cqcode";
+import type { CQCode } from "../../bot/cqcode";
 import { EventType } from "../enum";
-import { Anonymous, GroupSender, Sender } from "../sender";
-import { BaseEvent, SubType } from "./base";
+import type { Anonymous, GroupSender, Sender } from "../sender";
+import type { BaseEvent, SubType } from "./base";
 
 /** 消息事件接口 */
 interface BaseMessageEvent<S extends Sender | GroupSender, M extends "private" | "group"> extends BaseEvent<

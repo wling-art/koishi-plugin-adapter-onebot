@@ -1,6 +1,6 @@
-import { Device } from "../device";
+import type { Device } from "../device";
 import { EventType } from "../enum";
-import { BaseEvent } from "./base";
+import type { BaseEvent } from "./base";
 
 /**
  * 通知事件类型

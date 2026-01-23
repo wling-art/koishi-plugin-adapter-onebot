@@ -1,6 +1,6 @@
 import { type Dict } from "koishi";
-import { OneBot } from "./bot";
-import { CQCode } from "./bot/cqcode";
+import type { OneBot } from "./bot";
+import type { CQCode } from "./bot/cqcode";
 import type {
     EssenceMessage,
     FriendInfo,
@@ -17,7 +17,7 @@ import type {
     UnidirectionalFriendInfo
 } from "./types";
 import type { Device } from "./types/device";
-import { HonorType, SafetyLevel } from "./types/enum";
+import type { HonorType, SafetyLevel } from "./types/enum";
 import type { GroupMessageEvent, MessageEvent } from "./types/event/message";
 import type { GroupInfo, GroupMemberInfo } from "./types/group";
 import { SenderError } from "./types/sender";
@@ -422,7 +422,7 @@ export class Internal {
 
     async getRecord(
         file: string,
-        out_format: "mp3" | "amr" | "wma" | "m4a" | "spx" | "ogg" | "wav" | "flac" | string,
+        out_format: string,
         full_path?: boolean
     ): Promise<{
         /** 转换后的语音文件路径 */

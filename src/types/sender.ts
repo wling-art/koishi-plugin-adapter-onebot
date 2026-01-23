@@ -1,5 +1,5 @@
-import { Dict } from "koishi";
-import { GroupMemberRole, UserSex } from "./enum";
+import type { Dict } from "koishi";
+import type { GroupMemberRole, UserSex } from "./enum";
 
 /** 发送者信息
  *

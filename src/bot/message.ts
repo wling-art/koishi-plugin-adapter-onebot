@@ -1,7 +1,8 @@
-import { Context, h, MessageEncoder, pick, Universal, type Dict } from "koishi";
+import type { Context, h} from "koishi";
+import { MessageEncoder, pick, Universal, type Dict } from "koishi";
 import { fileURLToPath } from "node:url";
-import { OneBot } from ".";
-import { CQCode } from "./cqcode";
+import type { OneBot } from ".";
+import type { CQCode } from "./cqcode";
 
 export interface Author extends Universal.User {
     time?: string | number;
@@ -40,14 +41,20 @@ export class OneBotMessageEncoder<C extends Context = Context> extends MessageEn
         if (!this.stack[0] || !this.stack[0].children.length) return;
         const session = this.bot.session();
         session.content = "";
-        session.messageId = this.session.event.channel?.type === Universal.Channel.Type.DIRECT
-            ? (
-                  await this.bot.internal.sendPrivateForwardMsg(
-                      Number(this.channelId.slice(PRIVATE_PFX.length)),
-                      this.stack[0].children
-                  )
-              ).toString()
-            : (await this.bot.internal.sendGroupForwardMsg(Number(this.channelId), this.stack[0].children)).toString();
+        session.messageId =
+            this.session.event.channel?.type === Universal.Channel.Type.DIRECT
+                ? (
+                      await this.bot.internal.sendPrivateForwardMsg(
+                          Number(this.channelId.slice(PRIVATE_PFX.length)),
+                          this.stack[0].children as CQCode.MergeForward[]
+                      )
+                  ).toString()
+                : (
+                      await this.bot.internal.sendGroupForwardMsg(
+                          Number(this.channelId),
+                          this.stack[0].children as CQCode.MergeForward[]
+                      )
+                  ).toString();
         session.userId = this.bot.selfId;
         session.channelId = this.session.channelId;
         session.guildId = this.session.guildId;

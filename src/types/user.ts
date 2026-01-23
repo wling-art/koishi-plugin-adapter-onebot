@@ -1,4 +1,4 @@
-import { UserSex } from "./enum";
+import type { UserSex } from "./enum";
 
 /** 账号信息 */
 export interface UserInfo {

@@ -1,4 +1,4 @@
-import { EventType } from "../enum";
+import type { EventType } from "../enum";
 
 /** 消息子类型 */
 export enum SubType {
