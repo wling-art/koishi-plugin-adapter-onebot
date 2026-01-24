@@ -1,6 +1,6 @@
 {
     "name": "@mrlingxd/koishi-plugin-adapter-onebot",
-    "version": "0.2.7",
+    "version": "0.2.8",
     "description": "OneBot Adapter for Koishi",
     "keywords": [
         "adapter",
@@ -32,14 +32,16 @@
     "scripts": {
         "build": "atsc -b"
     },
+    "dependencies": {
+        "qface": "^1.4.1"
+    },
     "devDependencies": {
         "@koishijs/plugin-server": "^3.2.7",
-        "@types/node": "^25.0.9",
+        "@types/node": "^25.0.10",
         "atsc": "^2.1.0",
         "esbuild": "^0.27.2",
         "esbuild-register": "^3.6.0",
         "koishi": "^4.18.10",
-        "qface": "^1.4.1",
         "typescript": "^5.9.3",
         "yml-register": "^1.2.5"
     },
