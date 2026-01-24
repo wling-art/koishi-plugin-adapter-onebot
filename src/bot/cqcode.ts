@@ -1,4 +1,4 @@
-import type { Dict} from "koishi";
+import type { Dict } from "koishi";
 import { h } from "koishi";
 
 export function CQCode(type: string, attrs: Dict<string>) {

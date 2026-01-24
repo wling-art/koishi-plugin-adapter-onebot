@@ -1,4 +1,4 @@
-import type { Context} from "koishi";
+import type { Context } from "koishi";
 import { Bot, Schema, type Session, Universal } from "koishi";
 import { HttpServer } from "../http";
 import { Internal } from "../internal";

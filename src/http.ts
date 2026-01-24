@@ -1,6 +1,6 @@
 import {} from "@koishijs/plugin-server";
 import { createHmac } from "crypto";
-import type { Context} from "koishi";
+import type { Context } from "koishi";
 import { Adapter, HTTP, Schema, Universal } from "koishi";
 import type { OneBot } from "./bot";
 import { isBaseEvent } from "./types/event/base";

@@ -1,5 +1,5 @@
 import type { WebSocketLayer } from "@koishijs/plugin-server";
-import type { Context, Logger} from "koishi";
+import type { Context, Logger } from "koishi";
 import { Adapter, HTTP, Schema, Time, Universal, type Dict } from "koishi";
 import type { OneBot } from "./bot";
 import { dispatchSession, TimeoutError, type ApiResponse } from "./utils";
@@ -73,7 +73,7 @@ export class WsServer<C extends Context> extends Adapter<C, OneBot<C>> {
             accept(socket as Universal.WebSocket, bot);
         });
 
-        ctx.on("dispose",async () => {
+        ctx.on("dispose", async () => {
             this.logger.debug("ws server closing");
             this.wsServer.close();
             await this.disconnect(bot);

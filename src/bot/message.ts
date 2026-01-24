@@ -1,4 +1,4 @@
-import type { Context, h} from "koishi";
+import type { Context, h } from "koishi";
 import { MessageEncoder, pick, Universal, type Dict } from "koishi";
 import { fileURLToPath } from "node:url";
 import type { OneBot } from ".";
