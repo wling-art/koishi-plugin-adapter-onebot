@@ -1,18 +1,15 @@
 {
   "compilerOptions": {
-    "noEmit": true,
     "rootDir": "src",
     "outDir": "lib",
     "target": "es2022",
     "module": "ESNext",
     "moduleDetection": "force",
     "noImplicitThis": true,
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "useDefineForClassFields": true,
     "declaration": true,
     "noUncheckedIndexedAccess": true,
-    "emitDeclarationOnly": true,
     "forceConsistentCasingInFileNames": true,
     "libReplacement": false,
     "composite": true,
